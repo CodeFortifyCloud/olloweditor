@@ -7558,7 +7558,7 @@
       if (this.modalPanel) {
         this.modalPanel.className = "nw-editor-modal-panel";
         if (config.panelClass) {
-          this.modalPanel.classList.add(config.panelClass);
+          this.modalPanel.classList.add(...String(config.panelClass).split(/\s+/).filter(Boolean));
         }
       }
       this.modalTitle.textContent = config.title;
