@@ -1569,6 +1569,7 @@
       this.boundDocumentPointerDown = this.handleDocumentPointerDown.bind(this);
       this.boundDocumentKeydown = this.handleDocumentKeydown.bind(this);
       this.boundSystemThemeChange = this.handleSystemThemeChange.bind(this);
+      this.boundViewportChange = this.handleViewportChange.bind(this);
       this.boundRepositionImageToolbar = this.positionImageResizeToolbar.bind(this);
       this.boundImageResizeMove = this.handleImageResizeMove.bind(this);
       this.boundImageResizeEnd = this.handleImageResizeEnd.bind(this);
@@ -2765,6 +2766,8 @@
       window.addEventListener("scroll", this.boundRepositionImageToolbar, true);
       window.addEventListener("resize", this.boundRepositionTableToolbar);
       window.addEventListener("scroll", this.boundRepositionTableToolbar, true);
+      window.addEventListener("resize", this.boundViewportChange);
+      window.addEventListener("orientationchange", this.boundViewportChange);
 
       if (this.textarea.form) {
         const form = this.textarea.form;
@@ -2926,6 +2929,18 @@
         if (this.selectedTableFigure) {
           this.clearTableSelection();
         }
+      }
+    }
+
+    handleViewportChange() {
+      this.closeThemeMenu();
+      this.closeFontFamilyMenu();
+      this.closeFontSizeMenu();
+      if (this.selectedMediaBlock && !this.isDraggingImageResize) {
+        this.positionImageResizeToolbar();
+      }
+      if (this.selectedTableFigure) {
+        this.positionTableToolbar();
       }
     }
 
@@ -4580,6 +4595,8 @@
       window.removeEventListener("scroll", this.boundRepositionImageToolbar, true);
       window.removeEventListener("resize", this.boundRepositionTableToolbar);
       window.removeEventListener("scroll", this.boundRepositionTableToolbar, true);
+      window.removeEventListener("resize", this.boundViewportChange);
+      window.removeEventListener("orientationchange", this.boundViewportChange);
       document.removeEventListener("pointermove", this.boundImageResizeMove);
       document.removeEventListener("pointerup", this.boundImageResizeEnd);
       document.removeEventListener("pointercancel", this.boundImageResizeEnd);

@@ -305,6 +305,40 @@ Typography sanitizer notes:
 
 These controls use the same toolbar variables and dropdown surfaces as the rest of the editor, so they work in light, dark, and auto theme modes.
 
+## Responsive Support
+
+Ollow Editor is tuned for:
+
+- desktop PCs
+- laptops
+- tablets
+- mobile phones
+- small mobile screens
+- large monitors
+- touch devices
+- modern browsers
+
+Responsive behavior:
+
+- the editor card scales to the available viewport width
+- the main toolbar wraps on larger screens and becomes horizontally scrollable on smaller screens
+- font, size, and theme dropdowns stay inside the viewport
+- image, gallery, embed, table, and code blocks stay inside the editor width
+- wide tables and long code lines scroll inside their own containers instead of forcing page scroll
+- floating media and table controls move to a bottom-toolbar pattern on narrow mobile screens
+- modals switch to near-full-width mobile panels with scrollable bodies
+- the footer status bar wraps into stacked rows on small screens
+
+Testing checklist:
+
+1. Test a large desktop viewport and confirm the editor stays centered.
+2. Test a laptop-width viewport and confirm there is no horizontal page scroll.
+3. Test `768px` width and confirm the toolbar is still usable.
+4. Test `390px` and `320px` widths in browser responsive mode.
+5. Open font, size, and theme menus on mobile widths.
+6. Insert image, gallery, embed, table, and code blocks.
+7. Confirm media, tables, code blocks, and modals do not overflow the page.
+
 ## Paste Cleanup
 
 Ollow Editor cleans pasted rich content before inserting it into the editor. The cleanup is aimed at content copied from:
