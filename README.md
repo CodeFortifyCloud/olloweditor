@@ -862,15 +862,18 @@ Ollow Editor works in modern browsers:
 
 Possible future improvements:
 
-* Image resize controls
-* Media alignment options
-* Table support
-* Code block support
-* Markdown import/export
-* Editor plugin API
-* Dark mode
-* Keyboard shortcuts
-* Paste cleanup from Google Docs / MS Word
+* Font family + font size
+* Text color + background color
+* Styles dropdown
+* Strikethrough, subscript, superscript, remove format
+* Format painter
+* Advanced image controls
+* Advanced table controls
+* Find/replace
+* Special characters + emoji
+* Source/HTML mode
+* Export HTML/PDF
+* Import DOCX
 
 ---
 
