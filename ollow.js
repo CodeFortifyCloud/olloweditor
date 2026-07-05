@@ -45,6 +45,11 @@
     "nw-related-copy",
     "nw-related-story",
     "ollow-embed",
+    "ollow-align-center",
+    "ollow-align-full",
+    "ollow-align-left",
+    "ollow-align-right",
+    "ollow-align-wide",
     "ollow-editor-image",
     "ollow-gallery",
     "ollow-gallery-grid",
@@ -63,7 +68,9 @@
   const SECTION_DATA_TYPES = new Set(["gallery"]);
   const URL_ATTRS = new Set(["href", "src"]);
   const IMAGE_SIZE_CLASSES = ["ollow-image-small", "ollow-image-medium", "ollow-image-large", "ollow-image-full"];
+  const MEDIA_ALIGNMENT_CLASSES = ["ollow-align-left", "ollow-align-center", "ollow-align-right", "ollow-align-wide", "ollow-align-full"];
   const IMAGE_SELECTION_CLASSES = ["is-selected", "ollow-selected", "ollow-image-selected"];
+  const MEDIA_DATA_TYPES = new Set(["attachment", "embed", "gallery", "image"]);
   const IMAGE_SIZE_PRESETS = {
     small: 320,
     medium: 560,
@@ -439,6 +446,34 @@
     return null;
   }
 
+  function getSelectableMediaBlock(node, root) {
+    let current = node && node.nodeType === Node.TEXT_NODE ? node.parentNode : node;
+    while (current && current !== root) {
+      if (current.nodeType !== Node.ELEMENT_NODE) {
+        current = current.parentNode;
+        continue;
+      }
+
+      const dataType = current.getAttribute("data-type") || "";
+      if (MEDIA_DATA_TYPES.has(dataType)) {
+        return current;
+      }
+
+      if (
+        current.classList.contains("ollow-editor-image") ||
+        current.classList.contains("ollow-image") ||
+        current.classList.contains("ollow-gallery") ||
+        current.classList.contains("ollow-embed") ||
+        current.classList.contains("nw-attachment")
+      ) {
+        return current;
+      }
+
+      current = current.parentNode;
+    }
+    return null;
+  }
+
   function insertHtmlAtSelection(root, html, savedSelection) {
     const selection = window.getSelection();
     let range = null;
@@ -517,6 +552,7 @@
       this.feedback = null;
       this.imageResizeToolbar = null;
       this.imageResizeHandle = null;
+      this.selectedMediaBlock = null;
       this.selectedImageFigure = null;
       this.isDraggingImageResize = false;
       this.resizePointerId = null;
@@ -743,11 +779,22 @@
       toolbar.className = "ollow-image-resize-toolbar";
       toolbar.hidden = true;
       toolbar.innerHTML = `
-        <button type="button" data-image-size="small">Small</button>
-        <button type="button" data-image-size="medium">Medium</button>
-        <button type="button" data-image-size="large">Large</button>
-        <button type="button" data-image-size="full">Full</button>
-        <button type="button" data-image-size="reset">Reset</button>
+        <div class="ollow-media-toolbar-group" data-role="align-controls">
+          <button type="button" data-media-align="left">Left</button>
+          <button type="button" data-media-align="center">Center</button>
+          <button type="button" data-media-align="right">Right</button>
+          <button type="button" data-media-align="wide">Wide</button>
+          <button type="button" data-media-align="full">Full</button>
+          <button type="button" data-media-align="reset">Reset</button>
+        </div>
+        <span class="ollow-media-toolbar-divider" data-role="size-divider"></span>
+        <div class="ollow-media-toolbar-group" data-role="size-controls">
+          <button type="button" data-image-size="small">Small</button>
+          <button type="button" data-image-size="medium">Medium</button>
+          <button type="button" data-image-size="large">Large</button>
+          <button type="button" data-image-size="full">Full</button>
+          <button type="button" data-image-size="reset">Reset</button>
+        </div>
       `;
 
       toolbar.addEventListener("mousedown", (event) => {
@@ -755,6 +802,11 @@
       });
 
       toolbar.addEventListener("click", (event) => {
+        const alignmentButton = event.target.closest("[data-media-align]");
+        if (alignmentButton) {
+          this.applySelectedMediaAlignment(alignmentButton.dataset.mediaAlign);
+          return;
+        }
         const button = event.target.closest("[data-image-size]");
         if (!button) return;
         this.applySelectedImageSize(button.dataset.imageSize);
@@ -910,7 +962,7 @@
         this.saveSelection();
         this.updateToolbarState();
       }
-      if (this.selectedImageFigure && !this.isDraggingImageResize) {
+      if (this.selectedMediaBlock && !this.isDraggingImageResize) {
         this.positionImageResizeToolbar();
       }
     }
@@ -939,17 +991,17 @@
     }
 
     handleContentClick(event) {
-      const figure = getImageFigure(event.target, this.content);
-      if (figure) {
-        this.selectImageFigure(figure);
+      const mediaBlock = getSelectableMediaBlock(event.target, this.content);
+      if (mediaBlock) {
+        this.selectMediaBlock(mediaBlock);
         return;
       }
-      this.clearImageFigureSelection();
+      this.clearMediaSelection();
     }
 
     handleDocumentPointerDown(event) {
       if (!this.wrapper || !this.wrapper.contains(event.target)) {
-        this.clearImageFigureSelection();
+        this.clearMediaSelection();
         return;
       }
 
@@ -961,8 +1013,8 @@
         return;
       }
 
-      if (!getImageFigure(event.target, this.content)) {
-        this.clearImageFigureSelection();
+      if (!getSelectableMediaBlock(event.target, this.content)) {
+        this.clearMediaSelection();
       }
     }
 
@@ -1118,21 +1170,24 @@
       this.handleContentChange();
     }
 
-    selectImageFigure(figure) {
-      if (!figure || !this.content.contains(figure)) return;
-      if (this.selectedImageFigure && this.selectedImageFigure !== figure) {
-        this.selectedImageFigure.classList.remove(...IMAGE_SELECTION_CLASSES);
+    selectMediaBlock(block) {
+      if (!block || !this.content.contains(block)) return;
+      if (this.selectedMediaBlock && this.selectedMediaBlock !== block) {
+        this.selectedMediaBlock.classList.remove(...IMAGE_SELECTION_CLASSES);
       }
-      this.selectedImageFigure = figure;
-      this.selectedImageFigure.classList.add("is-selected");
+      this.selectedMediaBlock = block;
+      this.selectedImageFigure = getImageFigure(block, this.content);
+      this.selectedMediaBlock.classList.add("is-selected");
+      this.updateMediaAlignmentToolbarState();
       this.updateImageResizeToolbarState();
       this.positionImageResizeToolbar();
     }
 
-    clearImageFigureSelection() {
-      if (this.selectedImageFigure) {
-        this.selectedImageFigure.classList.remove(...IMAGE_SELECTION_CLASSES);
+    clearMediaSelection() {
+      if (this.selectedMediaBlock) {
+        this.selectedMediaBlock.classList.remove(...IMAGE_SELECTION_CLASSES);
       }
+      this.selectedMediaBlock = null;
       this.selectedImageFigure = null;
       if (this.imageResizeToolbar) {
         this.imageResizeToolbar.hidden = true;
@@ -1148,6 +1203,39 @@
       figure.classList.remove("ollow-media");
       figure.classList.remove("ollow-image");
       figure.removeAttribute("style");
+    }
+
+    getSelectedMediaAlignment() {
+      if (!this.selectedMediaBlock) return "";
+      if (this.selectedMediaBlock.classList.contains("ollow-align-left")) return "left";
+      if (this.selectedMediaBlock.classList.contains("ollow-align-center")) return "center";
+      if (this.selectedMediaBlock.classList.contains("ollow-align-right")) return "right";
+      if (this.selectedMediaBlock.classList.contains("ollow-align-wide")) return "wide";
+      if (this.selectedMediaBlock.classList.contains("ollow-align-full")) return "full";
+      return "";
+    }
+
+    updateMediaAlignmentToolbarState() {
+      if (!this.imageResizeToolbar) return;
+      const activeAlignment = this.getSelectedMediaAlignment();
+      Array.from(this.imageResizeToolbar.querySelectorAll("[data-media-align]")).forEach((button) => {
+        const value = button.dataset.mediaAlign;
+        const isActive = value === activeAlignment || (value === "reset" && !activeAlignment);
+        button.classList.toggle("is-active", isActive);
+      });
+
+      const sizeControls = this.imageResizeToolbar.querySelector('[data-role="size-controls"]');
+      const sizeDivider = this.imageResizeToolbar.querySelector('[data-role="size-divider"]');
+      const supportsImageResize = Boolean(this.selectedImageFigure);
+      if (sizeControls) {
+        sizeControls.hidden = !supportsImageResize;
+      }
+      if (sizeDivider) {
+        sizeDivider.hidden = !supportsImageResize;
+      }
+      if (!supportsImageResize && this.imageResizeHandle) {
+        this.imageResizeHandle.hidden = true;
+      }
     }
 
     getSelectedImageSize() {
@@ -1170,20 +1258,20 @@
     }
 
     positionImageResizeToolbar() {
-      if (!this.selectedImageFigure || !this.surface || !this.content.contains(this.selectedImageFigure)) {
-        this.clearImageFigureSelection();
+      const targetBlock = this.selectedMediaBlock;
+      if (!targetBlock || !this.surface || !this.content.contains(targetBlock)) {
+        this.clearMediaSelection();
         return;
       }
 
       const toolbar = this.imageResizeToolbar;
       const handle = this.imageResizeHandle;
-      if (!toolbar || !handle) return;
+      if (!toolbar) return;
 
       const surfaceRect = this.surface.getBoundingClientRect();
-      const figureRect = this.selectedImageFigure.getBoundingClientRect();
+      const figureRect = targetBlock.getBoundingClientRect();
 
       toolbar.hidden = false;
-      handle.hidden = false;
 
       const toolbarRect = toolbar.getBoundingClientRect();
       let top = figureRect.top - surfaceRect.top - toolbarRect.height - 10;
@@ -1197,8 +1285,11 @@
       toolbar.style.top = `${Math.round(top)}px`;
       toolbar.style.left = `${Math.round(left)}px`;
 
-      handle.style.top = `${Math.round(figureRect.bottom - surfaceRect.top)}px`;
-      handle.style.left = `${Math.round(figureRect.right - surfaceRect.left)}px`;
+      if (handle && this.selectedImageFigure) {
+        handle.hidden = false;
+        handle.style.top = `${Math.round(figureRect.bottom - surfaceRect.top)}px`;
+        handle.style.left = `${Math.round(figureRect.right - surfaceRect.left)}px`;
+      }
     }
 
     applySelectedImageSize(size) {
@@ -1210,6 +1301,21 @@
       }
       this.selectedImageFigure.classList.add("is-selected");
       this.updateImageResizeToolbarState();
+      this.positionImageResizeToolbar();
+      this.handleContentChange();
+    }
+
+    applySelectedMediaAlignment(alignment) {
+      if (!this.selectedMediaBlock) return;
+      if (this.selectedImageFigure) {
+        this.normalizeImageFigure(this.selectedImageFigure);
+      }
+      this.selectedMediaBlock.classList.remove(...MEDIA_ALIGNMENT_CLASSES);
+      if (alignment && alignment !== "reset") {
+        this.selectedMediaBlock.classList.add(`ollow-align-${alignment}`);
+      }
+      this.selectedMediaBlock.classList.add("is-selected");
+      this.updateMediaAlignmentToolbarState();
       this.positionImageResizeToolbar();
       this.handleContentChange();
     }
@@ -1805,8 +1911,8 @@
 
     getHTML() {
       const clone = this.content.cloneNode(true);
-      Array.from(clone.querySelectorAll("figure")).forEach((figure) => {
-        figure.classList.remove(...IMAGE_SELECTION_CLASSES);
+      Array.from(clone.querySelectorAll("*")).forEach((element) => {
+        element.classList.remove(...IMAGE_SELECTION_CLASSES);
       });
       return sanitizeFragment(clone.innerHTML);
     }
@@ -1816,7 +1922,7 @@
       const source = String(html || "").trim();
       const clean = source ? sanitizeFragment(source) : "";
       this.content.innerHTML = clean;
-      this.clearImageFigureSelection();
+      this.clearMediaSelection();
       this.isDirty = false;
       if (!config.skipSync) {
         this.sync({ autosave: false, silent: Boolean(config.silent) });

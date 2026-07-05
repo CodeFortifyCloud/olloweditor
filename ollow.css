@@ -557,6 +557,7 @@
   position: absolute;
   z-index: 1000;
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   align-items: center;
   background: #ffffff;
@@ -568,6 +569,19 @@
 
 .ollow-image-resize-toolbar[hidden] {
   display: none !important;
+}
+
+.ollow-media-toolbar-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.ollow-media-toolbar-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--nw-border);
 }
 
 .ollow-image-resize-toolbar button {
@@ -606,6 +620,31 @@
 
 .ollow-image-resize-handle[hidden] {
   display: none !important;
+}
+
+.nw-editor-content > .ollow-align-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.nw-editor-content > .ollow-align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.nw-editor-content > .ollow-align-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.nw-editor-content > .ollow-align-wide {
+  width: 100%;
+  max-width: 880px;
+}
+
+.nw-editor-content > .ollow-align-full {
+  width: 100%;
+  max-width: 100%;
 }
 
 .nw-status-meta,
@@ -801,6 +840,21 @@
     max-width: calc(100% - 20px);
     flex-wrap: wrap;
     border-radius: 18px;
+  }
+
+  .ollow-media-toolbar-divider {
+    display: none;
+  }
+
+  .nw-editor-content > .ollow-align-left,
+  .nw-editor-content > .ollow-align-center,
+  .nw-editor-content > .ollow-align-right,
+  .nw-editor-content > .ollow-align-wide,
+  .nw-editor-content > .ollow-align-full {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 

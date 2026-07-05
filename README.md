@@ -26,6 +26,7 @@ Ollow Editor is designed for newsroom-style writing, blog publishing, CMS forms,
 - Pull quote block
 - Image upload from local machine
 - Drag-and-drop image upload
+- Media alignment controls
 - Image URL insertion
 - Multiple-image gallery block
 - YouTube embed rendering
@@ -228,6 +229,34 @@ Local test flow:
 4. Insert the image
 5. Click the inserted image to show the resize toolbar
 6. Apply `Small`, `Medium`, `Large`, `Full`, or `Reset`
+
+### Media Alignment
+
+Click a supported media block to show the floating media toolbar. Alignment controls support:
+
+- `Left`
+- `Center`
+- `Right`
+- `Wide`
+- `Full`
+- `Reset`
+
+Supported media blocks:
+
+- Editor image figures
+- Gallery sections
+- YouTube embed figures
+- Attachment preview blocks
+
+Saved alignment classes:
+
+- `ollow-align-left`
+- `ollow-align-center`
+- `ollow-align-right`
+- `ollow-align-wide`
+- `ollow-align-full`
+
+Alignment classes are saved in the synced HTML. Temporary selection classes used by the floating toolbar are not saved.
 
 ---
 
