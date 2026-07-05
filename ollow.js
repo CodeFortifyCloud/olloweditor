@@ -28,6 +28,8 @@
     "UL",
   ]);
   const CLASS_ALLOWLIST = new Set([
+    "nw-editor-dragover",
+    "nw-editor-feedback",
     "nw-attachment",
     "nw-block-label",
     "nw-block-meta",
@@ -43,10 +45,15 @@
     "nw-related-copy",
     "nw-related-story",
     "ollow-embed",
+    "ollow-editor-image",
     "ollow-gallery",
     "ollow-gallery-grid",
     "ollow-gallery-header",
     "ollow-image",
+    "ollow-image-full",
+    "ollow-image-large",
+    "ollow-image-medium",
+    "ollow-image-small",
     "ollow-media",
     "ollow-video-wrapper",
   ]);
@@ -55,6 +62,13 @@
   const BLOCKQUOTE_DATA_TYPES = new Set(["pull-quote"]);
   const SECTION_DATA_TYPES = new Set(["gallery"]);
   const URL_ATTRS = new Set(["href", "src"]);
+  const IMAGE_SIZE_CLASSES = ["ollow-image-small", "ollow-image-medium", "ollow-image-large", "ollow-image-full"];
+  const IMAGE_SELECTION_CLASSES = ["is-selected", "ollow-selected", "ollow-image-selected"];
+  const IMAGE_SIZE_PRESETS = {
+    small: 320,
+    medium: 560,
+    large: 760,
+  };
   const instances = new Map();
   const formBindings = new WeakMap();
 
@@ -101,6 +115,18 @@
 
   function readMultipleFilesAsDataURLs(files) {
     return Promise.all(Array.from(files || []).map((file) => readImageFileAsDataURL(file)));
+  }
+
+  function extractUploadUrl(payload) {
+    if (!payload) return "";
+    if (typeof payload === "string") {
+      return payload.trim();
+    }
+    if (typeof payload === "object") {
+      const candidate = payload.url || payload.src || payload.location || "";
+      return typeof candidate === "string" ? candidate.trim() : "";
+    }
+    return "";
   }
 
   function parseYouTubeTime(value) {
@@ -394,6 +420,25 @@
     return null;
   }
 
+  function getImageFigure(node, root) {
+    let current = node && node.nodeType === Node.TEXT_NODE ? node.parentNode : node;
+    while (current && current !== root) {
+      if (
+        current.nodeType === Node.ELEMENT_NODE &&
+        current.tagName.toUpperCase() === "FIGURE" &&
+        (
+          current.classList.contains("ollow-editor-image") ||
+          current.classList.contains("ollow-image") ||
+          current.getAttribute("data-type") === "image"
+        )
+      ) {
+        return current;
+      }
+      current = current.parentNode;
+    }
+    return null;
+  }
+
   function insertHtmlAtSelection(root, html, savedSelection) {
     const selection = window.getSelection();
     let range = null;
@@ -467,7 +512,14 @@
       this.options = options;
       this.id = textarea.id || textarea.name || `nw-editor-${instances.size + 1}`;
       this.wrapper = null;
+      this.surface = null;
       this.content = null;
+      this.feedback = null;
+      this.imageResizeToolbar = null;
+      this.imageResizeHandle = null;
+      this.selectedImageFigure = null;
+      this.isDraggingImageResize = false;
+      this.resizePointerId = null;
       this.statusWordCount = null;
       this.statusReadTime = null;
       this.statusActive = null;
@@ -485,10 +537,15 @@
       this.savedSelection = null;
       this.autosaveTimer = null;
       this.lastSavedAt = null;
+      this.dragDepth = 0;
       this.isDirty = false;
       this.isFocused = false;
       this.boundSelectionChange = this.handleSelectionChange.bind(this);
       this.boundModalClose = this.closeModal.bind(this);
+      this.boundDocumentPointerDown = this.handleDocumentPointerDown.bind(this);
+      this.boundRepositionImageToolbar = this.positionImageResizeToolbar.bind(this);
+      this.boundImageResizeMove = this.handleImageResizeMove.bind(this);
+      this.boundImageResizeEnd = this.handleImageResizeEnd.bind(this);
     }
 
     init() {
@@ -519,6 +576,7 @@
 
       const surface = document.createElement("div");
       surface.className = "nw-editor-surface";
+      this.surface = surface;
 
       this.content = document.createElement("div");
       this.content.className = "nw-editor-content";
@@ -529,6 +587,16 @@
       this.content.setAttribute("aria-multiline", "true");
 
       surface.appendChild(this.content);
+
+      this.feedback = document.createElement("div");
+      this.feedback.className = "nw-editor-feedback";
+      this.feedback.hidden = true;
+      surface.appendChild(this.feedback);
+
+      this.imageResizeToolbar = this.buildImageResizeToolbar();
+      this.imageResizeHandle = this.buildImageResizeHandle();
+      surface.appendChild(this.imageResizeToolbar);
+      surface.appendChild(this.imageResizeHandle);
 
       const status = document.createElement("div");
       status.className = "nw-editor-status";
@@ -670,6 +738,49 @@
       return modal;
     }
 
+    buildImageResizeToolbar() {
+      const toolbar = document.createElement("div");
+      toolbar.className = "ollow-image-resize-toolbar";
+      toolbar.hidden = true;
+      toolbar.innerHTML = `
+        <button type="button" data-image-size="small">Small</button>
+        <button type="button" data-image-size="medium">Medium</button>
+        <button type="button" data-image-size="large">Large</button>
+        <button type="button" data-image-size="full">Full</button>
+        <button type="button" data-image-size="reset">Reset</button>
+      `;
+
+      toolbar.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+      });
+
+      toolbar.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-image-size]");
+        if (!button) return;
+        this.applySelectedImageSize(button.dataset.imageSize);
+      });
+
+      return toolbar;
+    }
+
+    buildImageResizeHandle() {
+      const handle = document.createElement("button");
+      handle.type = "button";
+      handle.className = "ollow-image-resize-handle";
+      handle.hidden = true;
+      handle.setAttribute("aria-label", "Resize image");
+
+      handle.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+      });
+
+      handle.addEventListener("pointerdown", (event) => {
+        this.startImageResize(event);
+      });
+
+      return handle;
+    }
+
     makeDivider() {
       const divider = document.createElement("div");
       divider.className = "nw-toolbar-divider";
@@ -742,8 +853,24 @@
         this.handlePaste(event);
       });
 
+      this.content.addEventListener("click", (event) => {
+        this.handleContentClick(event);
+      });
+
+      this.content.addEventListener("dragenter", (event) => {
+        this.handleDragEnter(event);
+      });
+
+      this.content.addEventListener("dragover", (event) => {
+        this.handleDragOver(event);
+      });
+
+      this.content.addEventListener("dragleave", (event) => {
+        this.handleDragLeave(event);
+      });
+
       this.content.addEventListener("drop", (event) => {
-        event.preventDefault();
+        this.handleDrop(event);
       });
 
       this.content.addEventListener("keyup", () => {
@@ -755,6 +882,9 @@
       });
 
       document.addEventListener("selectionchange", this.boundSelectionChange);
+      document.addEventListener("pointerdown", this.boundDocumentPointerDown);
+      window.addEventListener("resize", this.boundRepositionImageToolbar);
+      window.addEventListener("scroll", this.boundRepositionImageToolbar, true);
 
       if (this.textarea.form) {
         const form = this.textarea.form;
@@ -780,6 +910,9 @@
         this.saveSelection();
         this.updateToolbarState();
       }
+      if (this.selectedImageFigure && !this.isDraggingImageResize) {
+        this.positionImageResizeToolbar();
+      }
     }
 
     handleFormSubmit(event) {
@@ -803,6 +936,91 @@
       const clean = html ? sanitizeFragment(html) : sanitizePlainText(text);
       if (!clean) return;
       this.insertHTML(clean);
+    }
+
+    handleContentClick(event) {
+      const figure = getImageFigure(event.target, this.content);
+      if (figure) {
+        this.selectImageFigure(figure);
+        return;
+      }
+      this.clearImageFigureSelection();
+    }
+
+    handleDocumentPointerDown(event) {
+      if (!this.wrapper || !this.wrapper.contains(event.target)) {
+        this.clearImageFigureSelection();
+        return;
+      }
+
+      if (this.imageResizeToolbar && this.imageResizeToolbar.contains(event.target)) {
+        return;
+      }
+
+      if (this.imageResizeHandle && this.imageResizeHandle.contains(event.target)) {
+        return;
+      }
+
+      if (!getImageFigure(event.target, this.content)) {
+        this.clearImageFigureSelection();
+      }
+    }
+
+    handleDragEnter(event) {
+      if (!this.hasDraggedFiles(event)) return;
+      event.preventDefault();
+      this.dragDepth += 1;
+      if (this.isValidImageDrag(event)) {
+        this.setDragState(true);
+      }
+    }
+
+    handleDragOver(event) {
+      if (!this.hasDraggedFiles(event)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = this.isValidImageDrag(event) ? "copy" : "none";
+      this.setDragState(this.isValidImageDrag(event));
+    }
+
+    handleDragLeave(event) {
+      if (!this.hasDraggedFiles(event)) return;
+      event.preventDefault();
+      this.dragDepth = Math.max(0, this.dragDepth - 1);
+      if (this.dragDepth === 0) {
+        this.setDragState(false);
+      }
+    }
+
+    async handleDrop(event) {
+      if (!this.hasDraggedFiles(event)) {
+        event.preventDefault();
+        this.setDragState(false);
+        this.dragDepth = 0;
+        return;
+      }
+
+      event.preventDefault();
+      this.setDragState(false);
+      this.dragDepth = 0;
+      this.clearFeedback();
+
+      const files = Array.from((event.dataTransfer && event.dataTransfer.files) || []);
+      if (!files.length) return;
+
+      if (files.some((file) => !this.isImageFile(file))) {
+        this.showFeedback("Only image files can be dropped into the editor.");
+        return;
+      }
+
+      this.focus();
+      this.setSelectionFromPoint(event.clientX, event.clientY);
+      this.saveSelection();
+
+      try {
+        await this.insertDroppedImages(files);
+      } catch (error) {
+        this.showFeedback(error && error.message ? error.message : "Unable to insert dropped images.");
+      }
     }
 
     handleAction(action) {
@@ -900,6 +1118,297 @@
       this.handleContentChange();
     }
 
+    selectImageFigure(figure) {
+      if (!figure || !this.content.contains(figure)) return;
+      if (this.selectedImageFigure && this.selectedImageFigure !== figure) {
+        this.selectedImageFigure.classList.remove(...IMAGE_SELECTION_CLASSES);
+      }
+      this.selectedImageFigure = figure;
+      this.selectedImageFigure.classList.add("is-selected");
+      this.updateImageResizeToolbarState();
+      this.positionImageResizeToolbar();
+    }
+
+    clearImageFigureSelection() {
+      if (this.selectedImageFigure) {
+        this.selectedImageFigure.classList.remove(...IMAGE_SELECTION_CLASSES);
+      }
+      this.selectedImageFigure = null;
+      if (this.imageResizeToolbar) {
+        this.imageResizeToolbar.hidden = true;
+      }
+      if (this.imageResizeHandle) {
+        this.imageResizeHandle.hidden = true;
+      }
+    }
+
+    normalizeImageFigure(figure) {
+      if (!figure) return;
+      figure.classList.add("ollow-editor-image");
+      figure.classList.remove("ollow-media");
+      figure.classList.remove("ollow-image");
+      figure.removeAttribute("style");
+    }
+
+    getSelectedImageSize() {
+      if (!this.selectedImageFigure) return "";
+      if (this.selectedImageFigure.classList.contains("ollow-image-small")) return "small";
+      if (this.selectedImageFigure.classList.contains("ollow-image-medium")) return "medium";
+      if (this.selectedImageFigure.classList.contains("ollow-image-large")) return "large";
+      if (this.selectedImageFigure.classList.contains("ollow-image-full")) return "full";
+      return "";
+    }
+
+    updateImageResizeToolbarState() {
+      if (!this.imageResizeToolbar) return;
+      const activeSize = this.getSelectedImageSize();
+      Array.from(this.imageResizeToolbar.querySelectorAll("[data-image-size]")).forEach((button) => {
+        const value = button.dataset.imageSize;
+        const isActive = value === activeSize || (value === "reset" && !activeSize);
+        button.classList.toggle("is-active", isActive);
+      });
+    }
+
+    positionImageResizeToolbar() {
+      if (!this.selectedImageFigure || !this.surface || !this.content.contains(this.selectedImageFigure)) {
+        this.clearImageFigureSelection();
+        return;
+      }
+
+      const toolbar = this.imageResizeToolbar;
+      const handle = this.imageResizeHandle;
+      if (!toolbar || !handle) return;
+
+      const surfaceRect = this.surface.getBoundingClientRect();
+      const figureRect = this.selectedImageFigure.getBoundingClientRect();
+
+      toolbar.hidden = false;
+      handle.hidden = false;
+
+      const toolbarRect = toolbar.getBoundingClientRect();
+      let top = figureRect.top - surfaceRect.top - toolbarRect.height - 10;
+      if (top < 10) {
+        top = figureRect.bottom - surfaceRect.top + 10;
+      }
+
+      const maxLeft = Math.max(10, surfaceRect.width - toolbarRect.width - 10);
+      const left = Math.min(Math.max(10, figureRect.left - surfaceRect.left), maxLeft);
+
+      toolbar.style.top = `${Math.round(top)}px`;
+      toolbar.style.left = `${Math.round(left)}px`;
+
+      handle.style.top = `${Math.round(figureRect.bottom - surfaceRect.top)}px`;
+      handle.style.left = `${Math.round(figureRect.right - surfaceRect.left)}px`;
+    }
+
+    applySelectedImageSize(size) {
+      if (!this.selectedImageFigure) return;
+      this.normalizeImageFigure(this.selectedImageFigure);
+      this.selectedImageFigure.classList.remove(...IMAGE_SIZE_CLASSES);
+      if (size && size !== "reset") {
+        this.selectedImageFigure.classList.add(`ollow-image-${size}`);
+      }
+      this.selectedImageFigure.classList.add("is-selected");
+      this.updateImageResizeToolbarState();
+      this.positionImageResizeToolbar();
+      this.handleContentChange();
+    }
+
+    startImageResize(event) {
+      if (!this.selectedImageFigure || !this.imageResizeHandle) return;
+      event.preventDefault();
+      this.normalizeImageFigure(this.selectedImageFigure);
+      this.isDraggingImageResize = true;
+      this.resizePointerId = event.pointerId;
+      this.imageResizeHandle.setPointerCapture(event.pointerId);
+      document.addEventListener("pointermove", this.boundImageResizeMove);
+      document.addEventListener("pointerup", this.boundImageResizeEnd);
+      document.addEventListener("pointercancel", this.boundImageResizeEnd);
+    }
+
+    handleImageResizeMove(event) {
+      if (!this.selectedImageFigure || !this.isDraggingImageResize) return;
+      const contentRect = this.content.getBoundingClientRect();
+      if (!contentRect.width) return;
+
+      const targetWidth = Math.max(220, Math.min(event.clientX - contentRect.left, contentRect.width));
+      const size = this.getClosestImageSize(targetWidth, contentRect.width);
+      this.selectedImageFigure.classList.remove(...IMAGE_SIZE_CLASSES);
+      if (size) {
+        this.selectedImageFigure.classList.add(`ollow-image-${size}`);
+      }
+      this.selectedImageFigure.classList.add("is-selected");
+      this.updateImageResizeToolbarState();
+      this.positionImageResizeToolbar();
+    }
+
+    handleImageResizeEnd() {
+      if (!this.isDraggingImageResize) return;
+      if (this.imageResizeHandle && this.resizePointerId !== null) {
+        try {
+          this.imageResizeHandle.releasePointerCapture(this.resizePointerId);
+        } catch (error) {
+          // No-op.
+        }
+      }
+      this.isDraggingImageResize = false;
+      this.resizePointerId = null;
+      document.removeEventListener("pointermove", this.boundImageResizeMove);
+      document.removeEventListener("pointerup", this.boundImageResizeEnd);
+      document.removeEventListener("pointercancel", this.boundImageResizeEnd);
+      if (this.selectedImageFigure) {
+        this.selectedImageFigure.classList.add("is-selected");
+      }
+      this.positionImageResizeToolbar();
+      this.handleContentChange();
+    }
+
+    getClosestImageSize(width, maxWidth) {
+      if (maxWidth && width >= maxWidth * 0.92) {
+        return "full";
+      }
+
+      let chosen = "large";
+      let smallestDistance = Number.POSITIVE_INFINITY;
+      Object.entries(IMAGE_SIZE_PRESETS).forEach(([size, presetWidth]) => {
+        const distance = Math.abs(width - presetWidth);
+        if (distance < smallestDistance) {
+          smallestDistance = distance;
+          chosen = size;
+        }
+      });
+      return chosen;
+    }
+
+    setDragState(isActive) {
+      if (!this.surface) return;
+      this.surface.classList.toggle("nw-editor-dragover", Boolean(isActive));
+    }
+
+    showFeedback(message) {
+      if (!this.feedback) return;
+      this.feedback.textContent = String(message || "");
+      this.feedback.hidden = !message;
+    }
+
+    clearFeedback() {
+      if (!this.feedback) return;
+      this.feedback.textContent = "";
+      this.feedback.hidden = true;
+    }
+
+    hasDraggedFiles(event) {
+      const types = event.dataTransfer && event.dataTransfer.types;
+      return Boolean(types && Array.from(types).includes("Files"));
+    }
+
+    isValidImageDrag(event) {
+      const items = Array.from((event.dataTransfer && event.dataTransfer.items) || []);
+      if (!items.length) {
+        const files = Array.from((event.dataTransfer && event.dataTransfer.files) || []);
+        return files.length > 0 && files.every((file) => this.isImageFile(file));
+      }
+      let hasFile = false;
+      for (const item of items) {
+        if (item.kind !== "file") continue;
+        hasFile = true;
+        if (item.type && !item.type.startsWith("image/")) {
+          return false;
+        }
+      }
+      return hasFile;
+    }
+
+    isImageFile(file) {
+      return Boolean(file instanceof File && file.type && file.type.startsWith("image/"));
+    }
+
+    fileToDataURL(file) {
+      return readImageFileAsDataURL(file);
+    }
+
+    async uploadImageFile(file) {
+      if (typeof this.options.uploadAdapter === "function") {
+        const result = await this.options.uploadAdapter(file, this);
+        const url = extractUploadUrl(result);
+        if (!url || !isSafeUrl(url, "IMG")) {
+          throw new Error("The upload adapter must return a valid image URL.");
+        }
+        return url;
+      }
+
+      if (this.options.uploadUrl) {
+        const formData = new FormData();
+        formData.append(this.options.uploadFieldName || "image", file);
+
+        const response = await fetch(this.options.uploadUrl, {
+          method: this.options.uploadMethod || "POST",
+          headers: this.options.uploadHeaders || {},
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error("Image upload failed.");
+        }
+
+        const payload = await response.json();
+        const url = extractUploadUrl(payload);
+        if (!url || !isSafeUrl(url, "IMG")) {
+          throw new Error("The upload endpoint must return a valid image URL.");
+        }
+        return url;
+      }
+
+      return this.fileToDataURL(file);
+    }
+
+    async resolveImageSource(file) {
+      if (!this.isImageFile(file)) {
+        throw new Error("Only image files are supported.");
+      }
+      return this.uploadImageFile(file);
+    }
+
+    buildDroppedImageHtml(src) {
+      return `<figure class="ollow-editor-image"><img src="${escapeHtml(src)}" alt=""><figcaption></figcaption></figure>`;
+    }
+
+    async insertDroppedImages(files) {
+      const images = [];
+      for (const file of files) {
+        images.push(await this.resolveImageSource(file));
+      }
+      const html = images.map((src) => this.buildDroppedImageHtml(src)).join("");
+      if (!html) return;
+      this.insertHTML(html);
+      this.clearFeedback();
+    }
+
+    setSelectionFromPoint(clientX, clientY) {
+      let range = null;
+
+      if (document.caretRangeFromPoint) {
+        range = document.caretRangeFromPoint(clientX, clientY);
+      } else if (document.caretPositionFromPoint) {
+        const position = document.caretPositionFromPoint(clientX, clientY);
+        if (position) {
+          range = document.createRange();
+          range.setStart(position.offsetNode, position.offset);
+          range.collapse(true);
+        }
+      }
+
+      if (!range || !this.content.contains(range.commonAncestorContainer)) {
+        return;
+      }
+
+      const selection = window.getSelection();
+      if (!selection) return;
+      selection.removeAllRanges();
+      selection.addRange(range);
+      this.savedSelection = range.cloneRange();
+    }
+
     insertPullQuote() {
       const selection = window.getSelection();
       const selectedText = selection && selection.toString().trim();
@@ -973,7 +1482,7 @@
           let src = "";
 
           if (values.file) {
-            src = await readImageFileAsDataURL(values.file);
+            src = await this.resolveImageSource(values.file);
           } else if (values.url.trim()) {
             if (!isSafeUrl(values.url, "IMG")) {
               return "Enter a valid image URL.";
@@ -984,7 +1493,7 @@
           }
 
           this.insertHTML(
-            `<figure class="ollow-media ollow-image" data-type="image"><img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}">${caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : ""}</figure>`
+            `<figure class="ollow-editor-image" data-type="image"><img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}">${caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : ""}</figure>`
           );
           return null;
         },
@@ -1008,7 +1517,10 @@
 
           const title = values.title.trim() || "Gallery";
           const note = values.caption.trim();
-          const images = await readMultipleFilesAsDataURLs(values.files);
+          const images = [];
+          for (const file of values.files) {
+            images.push(await this.resolveImageSource(file));
+          }
           this.insertHTML(
             `<section class="ollow-media ollow-gallery" data-type="gallery"><div class="ollow-gallery-header"><h3>${escapeHtml(title)}</h3>${note ? `<p>${escapeHtml(note)}</p>` : ""}</div><div class="ollow-gallery-grid">${images.map((src, index) => `<figure><img src="${escapeHtml(src)}" alt="${escapeHtml(`${title} image ${index + 1}`)}"></figure>`).join("")}</div></section>`
           );
@@ -1292,7 +1804,11 @@
     }
 
     getHTML() {
-      return sanitizeFragment(this.content.innerHTML);
+      const clone = this.content.cloneNode(true);
+      Array.from(clone.querySelectorAll("figure")).forEach((figure) => {
+        figure.classList.remove(...IMAGE_SELECTION_CLASSES);
+      });
+      return sanitizeFragment(clone.innerHTML);
     }
 
     setHTML(html, options) {
@@ -1300,6 +1816,7 @@
       const source = String(html || "").trim();
       const clean = source ? sanitizeFragment(source) : "";
       this.content.innerHTML = clean;
+      this.clearImageFigureSelection();
       this.isDirty = false;
       if (!config.skipSync) {
         this.sync({ autosave: false, silent: Boolean(config.silent) });
@@ -1365,6 +1882,12 @@
     destroy() {
       window.clearTimeout(this.autosaveTimer);
       document.removeEventListener("selectionchange", this.boundSelectionChange);
+      document.removeEventListener("pointerdown", this.boundDocumentPointerDown);
+      window.removeEventListener("resize", this.boundRepositionImageToolbar);
+      window.removeEventListener("scroll", this.boundRepositionImageToolbar, true);
+      document.removeEventListener("pointermove", this.boundImageResizeMove);
+      document.removeEventListener("pointerup", this.boundImageResizeEnd);
+      document.removeEventListener("pointercancel", this.boundImageResizeEnd);
       if (this.textarea.form && this.textarea.form.dataset.nwEditorSubmitBound) {
         const binding = formBindings.get(this.textarea.form);
         if (binding) {

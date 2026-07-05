@@ -25,6 +25,7 @@ Ollow Editor is designed for newsroom-style writing, blog publishing, CMS forms,
 - Bullet and numbered lists
 - Pull quote block
 - Image upload from local machine
+- Drag-and-drop image upload
 - Image URL insertion
 - Multiple-image gallery block
 - YouTube embed rendering
@@ -101,6 +102,18 @@ Initialize the editor:
 
 After editing, the textarea will contain the synced HTML output.
 
+You can also configure image uploads during initialization:
+
+```html
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    OllowEditor.init("#ollo-editor", {
+      uploadUrl: "/api/uploads/images/"
+    });
+  });
+</script>
+```
+
 ---
 
 ## Example Form
@@ -167,6 +180,54 @@ Generated HTML example:
 ```
 
 For the static demo, local images are rendered using browser-based file reading. In a production app, you can replace this behavior with your own backend upload API.
+
+### Drag and Drop
+
+Users can drag one or more image files from their computer and drop them directly into the editor body.
+
+- Dropped images are inserted at the current drop position
+- Multiple images are inserted in the same order they were dropped
+- Non-image files are rejected with an editor error message
+- The browser default file-open behavior is prevented inside the editor drop area
+
+Dropped images use this HTML:
+
+```html
+<figure class="ollow-editor-image">
+  <img src="IMAGE_SRC" alt="">
+  <figcaption></figcaption>
+</figure>
+```
+
+If `uploadAdapter` or `uploadUrl` is configured, each dropped image is uploaded first and the returned URL is inserted. If neither is configured, Ollow Editor falls back to `FileReader` and inserts a base64 data URL so the image appears immediately.
+
+### Image Resize Controls
+
+Click an inserted editor image to show the floating resize toolbar. The toolbar supports:
+
+- `Small`
+- `Medium`
+- `Large`
+- `Full`
+- `Reset`
+
+Supported saved classes:
+
+- `ollow-image-small`
+- `ollow-image-medium`
+- `ollow-image-large`
+- `ollow-image-full`
+
+The selected image outline is a UI-only state and is not saved into the synced textarea HTML.
+
+Local test flow:
+
+1. Open `ollow.html`
+2. Click `Image`
+3. Choose `/home/jaki/Dev/olloweditor/image.jpg`
+4. Insert the image
+5. Click the inserted image to show the resize toolbar
+6. Apply `Small`, `Medium`, `Large`, `Full`, or `Reset`
 
 ---
 
@@ -275,7 +336,23 @@ async function uploadImageToServer(file) {
 }
 ```
 
-Then use the returned URL inside the inserted image HTML.
+Then initialize the editor with either an upload adapter or a simple upload URL:
+
+```js
+OllowEditor.init("#ollo-editor", {
+  uploadAdapter: async function (file) {
+    return uploadImageToServer(file);
+  }
+});
+```
+
+```js
+OllowEditor.init("#ollo-editor", {
+  uploadUrl: "/api/uploads/images/"
+});
+```
+
+`uploadAdapter` should return either a URL string or an object with `url`, `src`, or `location`. `uploadUrl` sends a `POST` request with a `FormData` field named `image` by default and expects the same response shape.
 
 ---
 
@@ -320,13 +397,11 @@ Ollow Editor works in modern browsers:
 
 Possible future improvements:
 
-* Drag-and-drop image upload
 * Image resize controls
 * Media alignment options
 * Table support
 * Code block support
 * Markdown import/export
-* Backend upload adapter
 * Editor plugin API
 * Dark mode
 * Keyboard shortcuts
