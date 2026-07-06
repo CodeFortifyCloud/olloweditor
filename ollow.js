@@ -2980,6 +2980,7 @@
         ["import-markdown", "Import MD", "upload_file"],
         ["export-markdown", "Export MD", "download"],
         ["export-html", "Export HTML", "download"],
+        ["export-pdf", "Export PDF", "print"],
         ["gallery", "Gallery", "photo_library"],
         ["embed", "Embed", "smart_display"],
         ["related", "Related", "article"],
@@ -5284,6 +5285,9 @@
           return;
         case "export-html":
           this.openHtmlExportModal();
+          return;
+        case "export-pdf":
+          this.openPdfExportModal();
           return;
         case "gallery":
           this.openGalleryModal();
@@ -8279,6 +8283,65 @@
       });
     }
 
+    openPdfExportModal() {
+      this.openModal({
+        title: "Export PDF",
+        copy: "Generate a print-ready document and use your browser's Save as PDF flow.",
+        confirmLabel: "Export / Print PDF",
+        panelClass: "ollow-export-pdf-panel",
+        fields: [
+          { name: "title", label: "Document title", type: "text", value: "OllowEditor Export" },
+          {
+            name: "pageSize",
+            label: "Page size",
+            type: "select",
+            options: [
+              { value: "A4", label: "A4" },
+              { value: "Letter", label: "Letter" },
+            ],
+          },
+          {
+            name: "orientation",
+            label: "Orientation",
+            type: "select",
+            options: [
+              { value: "portrait", label: "Portrait" },
+              { value: "landscape", label: "Landscape" },
+            ],
+          },
+          {
+            name: "margin",
+            label: "Margin",
+            type: "select",
+            options: [
+              { value: "normal", label: "Normal" },
+              { value: "narrow", label: "Narrow" },
+              { value: "wide", label: "Wide" },
+            ],
+          },
+          { name: "includeTitle", label: "Include title", type: "checkbox", checked: true },
+          { name: "includeDate", label: "Include date", type: "checkbox", checked: false },
+          { name: "includeSourceUrl", label: "Include source URL", type: "checkbox", checked: false },
+        ],
+        onConfirm: async (values) => {
+          try {
+            await this.exportPDF({
+              title: values.title || "OllowEditor Export",
+              pageSize: values.pageSize || "A4",
+              orientation: values.orientation || "portrait",
+              margin: values.margin || "normal",
+              includeTitle: Boolean(values.includeTitle),
+              includeDate: Boolean(values.includeDate),
+              includeSourceUrl: Boolean(values.includeSourceUrl),
+            });
+            return null;
+          } catch (error) {
+            return error && error.message ? error.message : "Unable to open the print dialog.";
+          }
+        },
+      });
+    }
+
     openModal(config) {
       this.saveSelection();
       if (this.wrapper) {
@@ -8710,6 +8773,12 @@
     }
 
     getExportHTMLStyles() {
+      const fontStyles = FONT_FAMILIES.map((font) => `.ollow-exported-content .ollow-font-${font.key} { font-family: ${font.stack}; }`).join("\n");
+      const fontSizeStyles = FONT_SIZE_PRESETS.map((size) => `.ollow-exported-content .ollow-font-size-${size} { font-size: ${size}px; }`).join("\n");
+      const newsroomTextColorStyles = TEXT_COLOR_PRESETS
+        .filter((color) => !["black", "gray", "red", "orange", "yellow", "green", "blue", "purple", "white"].includes(color.key))
+        .map((color) => `.ollow-exported-content .ollow-text-color-${color.key} { color: ${color.hex}; }`)
+        .join("\n");
       return `
 body {
   margin: 0;
@@ -8821,6 +8890,9 @@ body {
 .ollow-exported-content .ollow-align-right { margin-left: auto; margin-right: 0; }
 .ollow-exported-content .ollow-align-wide,
 .ollow-exported-content .ollow-table-wide { width: min(100%, 920px); max-width: 920px; margin-left: auto; margin-right: auto; }
+${fontStyles}
+${fontSizeStyles}
+${newsroomTextColorStyles}
 `;
     }
 
@@ -8847,6 +8919,194 @@ body {
   ${bodyHtml}
 </body>
 </html>`;
+    }
+
+    getPdfMarginValue(margin) {
+      if (margin === "narrow") return "10mm";
+      if (margin === "wide") return "25mm";
+      return "18mm";
+    }
+
+    getExportPDFStyles(options) {
+      const pageSize = options.pageSize === "Letter" ? "Letter" : "A4";
+      const orientation = options.orientation === "landscape" ? "landscape" : "portrait";
+      const margin = this.getPdfMarginValue(options.margin);
+      return `
+@page {
+  size: ${pageSize} ${orientation};
+  margin: ${margin};
+}
+${this.getExportHTMLStyles()}
+body {
+  padding: 0;
+  color: #111827;
+  background: #ffffff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.ollow-exported-content {
+  width: 100%;
+  max-width: none;
+}
+.ollow-export-meta {
+  margin: 0 0 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #d7dee8;
+}
+.ollow-export-meta h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+  line-height: 1.15;
+}
+.ollow-export-meta p {
+  margin: 4px 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+.ollow-exported-content img {
+  max-width: 100%;
+  height: auto;
+  break-inside: avoid;
+}
+.ollow-exported-content figure,
+.ollow-exported-content table,
+.ollow-exported-content pre,
+.ollow-exported-content blockquote {
+  break-inside: avoid;
+}
+.ollow-exported-content .ollow-gallery {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+.ollow-exported-content pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: visible;
+}
+.ollow-exported-content iframe {
+  width: 100%;
+  min-height: 320px;
+}
+.ollow-print-embed-link {
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+@media print {
+  body {
+    background: #fff;
+    color: #111827;
+  }
+}
+`;
+    }
+
+    buildPdfExportArticle(html, options) {
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = `<article class="ollow-exported-content">${html}</article>`;
+      Array.from(wrapper.querySelectorAll("iframe[src]")).forEach((iframe) => {
+        const src = iframe.getAttribute("src");
+        if (!src) return;
+        const link = document.createElement("p");
+        link.className = "ollow-print-embed-link";
+        const anchor = document.createElement("a");
+        anchor.href = src;
+        anchor.textContent = src;
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+        link.textContent = "Video link: ";
+        link.appendChild(anchor);
+        iframe.insertAdjacentElement("afterend", link);
+      });
+      const article = wrapper.firstElementChild;
+      if (!article) return "";
+
+      const meta = document.createElement("header");
+      meta.className = "ollow-export-meta";
+      let hasMeta = false;
+      if (options.includeTitle) {
+        const title = document.createElement("h1");
+        title.textContent = String(options.title || "OllowEditor Export");
+        meta.appendChild(title);
+        hasMeta = true;
+      }
+      if (options.includeDate) {
+        const dateLine = document.createElement("p");
+        dateLine.textContent = new Intl.DateTimeFormat([], { year: "numeric", month: "long", day: "numeric" }).format(new Date());
+        meta.appendChild(dateLine);
+        hasMeta = true;
+      }
+      if (options.includeSourceUrl && window.location && window.location.href) {
+        const sourceLine = document.createElement("p");
+        sourceLine.textContent = window.location.href;
+        meta.appendChild(sourceLine);
+        hasMeta = true;
+      }
+      if (hasMeta) {
+        article.insertAdjacentElement("afterbegin", meta);
+      }
+      return article.outerHTML;
+    }
+
+    buildPdfExportDocument(options) {
+      this.sync({ autosave: false, preserveDirty: true, silent: true });
+      const cleanHtml = this.getHTML();
+      const article = this.buildPdfExportArticle(cleanHtml, options);
+      return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(options.title || "OllowEditor Export")}</title>
+  <style>
+${this.getExportPDFStyles(options)}
+  </style>
+</head>
+<body>
+  ${article}
+</body>
+</html>`;
+    }
+
+    exportPDF(options) {
+      const config = Object.assign({
+        title: "OllowEditor Export",
+        pageSize: "A4",
+        orientation: "portrait",
+        margin: "normal",
+        includeTitle: true,
+        includeDate: false,
+        includeSourceUrl: false,
+      }, options || {});
+      const html = this.buildPdfExportDocument(config);
+      const popup = window.open("", "_blank", "noopener,noreferrer");
+      if (!popup) {
+        throw new Error("The browser blocked the print window.");
+      }
+      popup.document.open();
+      popup.document.write(html);
+      popup.document.close();
+      const detail = {
+        editor: this,
+        pageSize: config.pageSize,
+        orientation: config.orientation,
+        margin: config.margin,
+      };
+      this.textarea.dispatchEvent(new CustomEvent("ollow-editor:export-pdf", {
+        bubbles: true,
+        detail,
+      }));
+      this.emit("exportpdf", Object.assign({ html }, detail));
+      const runPrint = () => {
+        popup.focus();
+        popup.print();
+      };
+      if (popup.document.readyState === "complete") {
+        window.setTimeout(runPrint, 150);
+      } else {
+        popup.addEventListener("load", () => {
+          window.setTimeout(runPrint, 150);
+        }, { once: true });
+      }
+      return popup;
     }
 
     focus() {

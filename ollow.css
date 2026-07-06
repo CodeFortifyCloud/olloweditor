@@ -2141,6 +2141,10 @@
   width: min(92vw, 820px);
 }
 
+.ollow-export-pdf-panel {
+  width: min(92vw, 640px);
+}
+
 .ollow-export-html-panel .nw-modal-textarea {
   min-height: 320px;
   font: 12px/1.65 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;

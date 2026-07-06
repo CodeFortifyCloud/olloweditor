@@ -28,6 +28,7 @@ Ollow Editor is designed for newsroom-style writing, blog publishing, CMS forms,
 - Find and replace
 - Source / HTML mode
 - Export HTML
+- Export PDF
 - Bullet and numbered lists
 - Pull quote block
 - Image upload from local machine
@@ -188,6 +189,7 @@ Ollow Editor currently supports:
 | Find / Replace| Search and replace text         |
 | HTML          | Toggle source / HTML mode       |
 | Export HTML   | Export clean editor HTML        |
+| Export PDF    | Open browser print/PDF export   |
 | Bullet List   | Insert unordered list           |
 | Numbered List | Insert ordered list             |
 | Pull Quote    | Insert styled quote block       |
@@ -424,6 +426,39 @@ const html = editor.exportHTML({
   title: "Article Export"
 });
 ```
+
+## Export PDF
+
+Use the `Export PDF` toolbar button to open a print-export settings modal.
+
+Settings:
+
+- page size: `A4` or `Letter`
+- orientation: `Portrait` or `Landscape`
+- margin: `Normal`, `Narrow`, `Wide`
+- optional title, date, and source URL in the exported document
+
+Behavior:
+
+- PDF export uses the browser print dialog
+- the editor generates a clean print-ready HTML document in a popup window
+- from there the browser's `Save as PDF` flow is used
+- unsafe UI elements and temporary editor state are not included
+
+Public API:
+
+```js
+editor.exportPDF({
+  title: "Article",
+  pageSize: "A4",
+  orientation: "portrait",
+  margin: "normal"
+});
+```
+
+Limitation:
+
+- OllowEditor does not generate PDF bytes directly; it relies on the browser print / save-as-PDF flow
 
 ## Font Family and Size
 
