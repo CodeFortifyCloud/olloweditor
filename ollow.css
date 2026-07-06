@@ -2137,6 +2137,16 @@
   padding: 20px;
 }
 
+.ollow-export-html-panel {
+  width: min(92vw, 820px);
+}
+
+.ollow-export-html-panel .nw-modal-textarea {
+  min-height: 320px;
+  font: 12px/1.65 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  white-space: pre;
+}
+
 .nw-editor-modal-panel {
   width: min(92vw, 560px);
   max-height: min(90vh, 760px);

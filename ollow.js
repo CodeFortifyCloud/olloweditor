@@ -467,6 +467,11 @@
       .replace(/\n{3,}/g, "\n\n");
   }
 
+  function normalizeHtmlFilename(value) {
+    const source = String(value || "").trim() || "ollow-export.html";
+    return /\.html?$/i.test(source) ? source : `${source}.html`;
+  }
+
   function getFontSizeClassName(size) {
     return `${FONT_SIZE_CLASS_PREFIX}${size}`;
   }
@@ -2974,6 +2979,7 @@
         ["emoji", "Emoji", ""],
         ["import-markdown", "Import MD", "upload_file"],
         ["export-markdown", "Export MD", "download"],
+        ["export-html", "Export HTML", "download"],
         ["gallery", "Gallery", "photo_library"],
         ["embed", "Embed", "smart_display"],
         ["related", "Related", "article"],
@@ -5275,6 +5281,9 @@
           return;
         case "export-markdown":
           this.openMarkdownExportModal();
+          return;
+        case "export-html":
+          this.openHtmlExportModal();
           return;
         case "gallery":
           this.openGalleryModal();
@@ -8160,6 +8169,116 @@
       });
     }
 
+    openHtmlExportModal() {
+      const announceExport = (fieldRefs, html) => {
+        const detail = {
+          editor: this,
+          fullDocument: fieldRefs.mode.value === "document",
+          includeStyles: Boolean(fieldRefs.includeStyles.checked),
+          filename: normalizeHtmlFilename(fieldRefs.filename.value),
+          html,
+        };
+        this.textarea.dispatchEvent(new CustomEvent("ollow-editor:export-html", {
+          bubbles: true,
+          detail,
+        }));
+        this.emit("exporthtml", detail);
+        return detail;
+      };
+      const buildPreview = (fieldRefs) => {
+        const fullDocument = fieldRefs.mode.value === "document";
+        const includeStyles = Boolean(fieldRefs.includeStyles.checked);
+        const title = String(fieldRefs.title.value || "OllowEditor Export");
+        const html = this.exportHTML({
+          fullDocument,
+          includeStyles,
+          title,
+        });
+        fieldRefs.preview.value = html;
+        return html;
+      };
+
+      this.openModal({
+        title: "Export HTML",
+        copy: "Review the generated HTML, copy it, or download it as a standalone file.",
+        confirmLabel: "Close",
+        panelClass: "ollow-export-html-panel",
+        fields: [
+          {
+            name: "mode",
+            label: "Export mode",
+            type: "select",
+            options: [
+              { value: "body", label: "Body only" },
+              { value: "document", label: "Full HTML document" },
+            ],
+          },
+          { name: "includeStyles", label: "Include editor styles", type: "checkbox", checked: true },
+          { name: "title", label: "Document title", type: "text", value: "OllowEditor Export" },
+          { name: "filename", label: "Filename", type: "text", value: "ollow-export.html" },
+          { name: "preview", label: "HTML preview", type: "textarea", value: "", spellcheck: false, readonly: true },
+        ],
+        extraActions: [
+          {
+            label: "Copy HTML",
+            className: "nw-modal-button nw-modal-button--secondary",
+            onClick: async (fieldRefs) => {
+              const html = buildPreview(fieldRefs);
+              try {
+                if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+                  await navigator.clipboard.writeText(html);
+                } else {
+                  fieldRefs.preview.focus();
+                  fieldRefs.preview.select();
+                  document.execCommand("copy");
+                }
+                this.showFeedback("HTML copied to clipboard.");
+              } catch (error) {
+                try {
+                  fieldRefs.preview.focus();
+                  fieldRefs.preview.select();
+                  document.execCommand("copy");
+                  this.showFeedback("HTML copied to clipboard.");
+                } catch (fallbackError) {
+                  this.showFeedback("Unable to copy HTML.");
+                }
+              }
+              announceExport(fieldRefs, html);
+            },
+          },
+          {
+            label: "Download HTML",
+            className: "nw-modal-button nw-modal-button--secondary",
+            onClick: (fieldRefs) => {
+              const html = buildPreview(fieldRefs);
+              const filename = normalizeHtmlFilename(fieldRefs.filename.value);
+              const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = filename;
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              window.setTimeout(() => URL.revokeObjectURL(url), 0);
+              announceExport(fieldRefs, html);
+            },
+          },
+        ],
+        onOpen: (fieldRefs) => {
+          const refresh = () => buildPreview(fieldRefs);
+          ["mode", "includeStyles", "title", "filename"].forEach((key) => {
+            const input = fieldRefs[key];
+            if (!input) return;
+            input.addEventListener("input", refresh);
+            input.addEventListener("change", refresh);
+          });
+          buildPreview(fieldRefs);
+        },
+        onConfirm: () => null,
+      });
+    }
+
     openModal(config) {
       this.saveSelection();
       if (this.wrapper) {
@@ -8588,6 +8707,146 @@
 
     exportMarkdown() {
       return exportHtmlToMarkdown(this.getHTML());
+    }
+
+    getExportHTMLStyles() {
+      return `
+body {
+  margin: 0;
+  padding: 32px 20px;
+  background: #ffffff;
+  color: #111827;
+  font: 16px/1.75 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.ollow-exported-content {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+.ollow-exported-content h2,
+.ollow-exported-content h3,
+.ollow-exported-content h4 {
+  margin: 0 0 16px;
+  line-height: 1.2;
+}
+.ollow-exported-content p,
+.ollow-exported-content ul,
+.ollow-exported-content ol,
+.ollow-exported-content blockquote,
+.ollow-exported-content figure,
+.ollow-exported-content section,
+.ollow-exported-content pre {
+  margin: 0 0 18px;
+}
+.ollow-exported-content img,
+.ollow-exported-content iframe {
+  max-width: 100%;
+}
+.ollow-exported-content .nw-pull-quote {
+  border-left: 4px solid #dc2626;
+  padding-left: 16px;
+  font-size: 1.2rem;
+}
+.ollow-exported-content .ollow-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.ollow-exported-content .ollow-editor-table-scroll {
+  overflow-x: auto;
+}
+.ollow-exported-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.ollow-exported-content th,
+.ollow-exported-content td {
+  border: 1px solid #d7dee8;
+  padding: 10px 12px;
+  vertical-align: top;
+}
+.ollow-exported-content pre {
+  overflow-x: auto;
+  padding: 14px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #f8fafc;
+}
+.ollow-exported-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.ollow-exported-content .nw-fact-box,
+.ollow-exported-content .nw-related-block,
+.ollow-exported-content .ollow-editor-attachment {
+  border: 1px solid #d7dee8;
+  border-radius: 10px;
+  padding: 14px;
+  background: #f8fafc;
+}
+.ollow-exported-content .ollow-bookmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.92rem;
+  color: #475569;
+}
+.ollow-exported-content .ollow-text-left { text-align: left; }
+.ollow-exported-content .ollow-text-center { text-align: center; }
+.ollow-exported-content .ollow-text-right { text-align: right; }
+.ollow-exported-content .ollow-text-justify { text-align: justify; }
+.ollow-exported-content .ollow-highlight-yellow { background: #fde68a; }
+.ollow-exported-content .ollow-highlight-green { background: #bbf7d0; }
+.ollow-exported-content .ollow-highlight-cyan { background: #bfdbfe; }
+.ollow-exported-content .ollow-highlight-pink { background: #fbcfe8; }
+.ollow-exported-content .ollow-highlight-red { background: #fecaca; }
+.ollow-exported-content .ollow-highlight-orange { background: #fed7aa; }
+.ollow-exported-content .ollow-highlight-purple { background: #ddd6fe; }
+.ollow-exported-content .ollow-highlight-gray { background: #e5e7eb; }
+.ollow-exported-content .ollow-text-color-black { color: #000000; }
+.ollow-exported-content .ollow-text-color-gray { color: #6b7280; }
+.ollow-exported-content .ollow-text-color-red { color: #dc2626; }
+.ollow-exported-content .ollow-text-color-orange { color: #ea580c; }
+.ollow-exported-content .ollow-text-color-yellow { color: #ca8a04; }
+.ollow-exported-content .ollow-text-color-green { color: #16a34a; }
+.ollow-exported-content .ollow-text-color-blue { color: #2563eb; }
+.ollow-exported-content .ollow-text-color-purple { color: #7c3aed; }
+.ollow-exported-content .ollow-text-color-white { color: #ffffff; }
+.ollow-exported-content .ollow-image-small { max-width: 320px; }
+.ollow-exported-content .ollow-image-medium { max-width: 560px; }
+.ollow-exported-content .ollow-image-large { max-width: 760px; }
+.ollow-exported-content .ollow-image-full,
+.ollow-exported-content .ollow-align-full,
+.ollow-exported-content .ollow-table-full { width: 100%; max-width: 100%; }
+.ollow-exported-content .ollow-align-left { margin-left: 0; margin-right: auto; }
+.ollow-exported-content .ollow-align-center { margin-left: auto; margin-right: auto; }
+.ollow-exported-content .ollow-align-right { margin-left: auto; margin-right: 0; }
+.ollow-exported-content .ollow-align-wide,
+.ollow-exported-content .ollow-table-wide { width: min(100%, 920px); max-width: 920px; margin-left: auto; margin-right: auto; }
+`;
+    }
+
+    exportHTML(options) {
+      const config = Object.assign({
+        fullDocument: false,
+        includeStyles: false,
+        title: "OllowEditor Export",
+      }, options || {});
+      this.sync({ autosave: false, preserveDirty: true, silent: true });
+      const bodyHtml = `<article class="ollow-exported-content">\n${this.getHTML()}\n</article>`;
+      if (!config.fullDocument) {
+        return bodyHtml;
+      }
+      const styleBlock = config.includeStyles ? `\n  <style>\n${this.getExportHTMLStyles()}\n  </style>` : "";
+      return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(config.title || "OllowEditor Export")}</title>${styleBlock}
+</head>
+<body>
+  ${bodyHtml}
+</body>
+</html>`;
     }
 
     focus() {

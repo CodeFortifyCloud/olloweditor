@@ -27,6 +27,7 @@ Ollow Editor is designed for newsroom-style writing, blog publishing, CMS forms,
 - Emoji picker
 - Find and replace
 - Source / HTML mode
+- Export HTML
 - Bullet and numbered lists
 - Pull quote block
 - Image upload from local machine
@@ -186,6 +187,7 @@ Ollow Editor currently supports:
 | Emoji         | Insert emoji                    |
 | Find / Replace| Search and replace text         |
 | HTML          | Toggle source / HTML mode       |
+| Export HTML   | Export clean editor HTML        |
 | Bullet List   | Insert unordered list           |
 | Numbered List | Insert ordered list             |
 | Pull Quote    | Insert styled quote block       |
@@ -390,6 +392,38 @@ Notes:
 - source mode does not execute scripts
 - temporary UI markup is not preserved
 - the saved textarea value remains sanitized editor HTML
+
+## Export HTML
+
+Use the `Export HTML` toolbar button to export the current editor content as clean HTML.
+
+Modes:
+
+- `Body only` exports:
+  ```html
+  <article class="ollow-exported-content">
+    ...
+  </article>
+  ```
+- `Full HTML document` exports a complete standalone HTML file with optional embedded styles
+
+Behavior:
+
+- export always uses sanitized editor HTML
+- temporary UI classes and find highlights are removed before export
+- toolbar, modals, floating controls, and selection markers are never included
+- `Copy HTML` copies the preview
+- `Download HTML` saves an `.html` file using a Blob download
+
+Public API:
+
+```js
+const html = editor.exportHTML({
+  fullDocument: true,
+  includeStyles: true,
+  title: "Article Export"
+});
+```
 
 ## Font Family and Size
 
