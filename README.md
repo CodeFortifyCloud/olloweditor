@@ -30,6 +30,7 @@ Ollow Editor is designed for newsroom-style writing, blog publishing, CMS forms,
 - Export HTML
 - Export PDF
 - Import DOCX
+- Export DOCX
 - Bullet and numbered lists
 - Pull quote block
 - Image upload from local machine
@@ -192,6 +193,7 @@ Ollow Editor currently supports:
 | Export HTML   | Export clean editor HTML        |
 | Export PDF    | Open browser print/PDF export   |
 | Import DOCX   | Import a Word .docx file        |
+| Export DOCX   | Export DOCX or Word fallback    |
 | Bullet List   | Insert unordered list           |
 | Numbered List | Insert ordered list             |
 | Pull Quote    | Insert styled quote block       |
@@ -518,6 +520,56 @@ editor.importDOCX(file, {
   mode: "replace",
   preserveFormatting: true,
   importImages: true
+});
+```
+
+## Export DOCX
+
+Use the `Export DOCX` toolbar button to export editor content for Microsoft Word or LibreOffice.
+
+UI:
+
+- document title
+- filename
+- export mode:
+  - `Real DOCX if supported`
+  - `Word-compatible HTML fallback`
+- include title
+- include images
+- include captions
+
+Real DOCX vs fallback:
+
+- real `.docx` export requires an optional DOCX export adapter
+- if that adapter is available, OllowEditor uses it for true DOCX output
+- otherwise the editor exports a Word-compatible `.doc` HTML file
+- the fallback is clearly labeled and never saved with a fake `.docx` extension
+
+Supported export content:
+
+- headings
+- paragraphs
+- links
+- lists
+- tables
+- images
+- blockquotes
+- code blocks as readable preformatted content
+
+Limitations:
+
+- true `.docx` generation depends on an optional browser-compatible adapter
+- some advanced editor-only block styling is flattened into readable Word content
+- embeds are converted to readable links
+
+API:
+
+```js
+editor.exportDOCX({
+  filename: "article.docx",
+  title: "Article Title",
+  includeImages: true,
+  fallbackToDoc: true
 });
 ```
 

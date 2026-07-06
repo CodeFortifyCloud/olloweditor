@@ -472,6 +472,13 @@
     return /\.html?$/i.test(source) ? source : `${source}.html`;
   }
 
+  function normalizeDocFilename(value, extension) {
+    const ext = extension === "docx" ? ".docx" : ".doc";
+    const source = String(value || "").trim() || `ollow-export${ext}`;
+    const stripped = source.replace(/\.(docx?|html?)$/i, "");
+    return `${stripped}${ext}`;
+  }
+
   function getFontSizeClassName(size) {
     return `${FONT_SIZE_CLASS_PREFIX}${size}`;
   }
@@ -3001,6 +3008,7 @@
         ["export-markdown", "Export MD", "download"],
         ["export-html", "Export HTML", "download"],
         ["export-pdf", "Export PDF", "print"],
+        ["export-docx", "Export DOCX", "download"],
         ["gallery", "Gallery", "photo_library"],
         ["embed", "Embed", "smart_display"],
         ["related", "Related", "article"],
@@ -5311,6 +5319,9 @@
           return;
         case "export-pdf":
           this.openPdfExportModal();
+          return;
+        case "export-docx":
+          this.openDocxExportModal();
           return;
         case "gallery":
           this.openGalleryModal();
@@ -8410,6 +8421,63 @@
       });
     }
 
+    openDocxExportModal() {
+      const hasRealDocx = Boolean(this.getDocxExporter());
+      this.openModal({
+        title: "Export DOCX",
+        copy: "Export a real DOCX when an optional DOCX export adapter is available, or fall back to a Word-compatible .doc file.",
+        confirmLabel: "Export DOCX",
+        panelClass: "ollow-export-docx-panel",
+        fields: [
+          { name: "title", label: "Document title", type: "text", value: "OllowEditor Export" },
+          { name: "filename", label: "Filename", type: "text", value: hasRealDocx ? "ollow-export.docx" : "ollow-export.doc" },
+          {
+            name: "mode",
+            label: "Export mode",
+            type: "select",
+            options: [
+              { value: "docx", label: "Real DOCX if supported" },
+              { value: "doc", label: "Word-compatible HTML fallback" },
+            ],
+          },
+          { name: "includeTitle", label: "Include title", type: "checkbox", checked: true },
+          { name: "includeImages", label: "Include images", type: "checkbox", checked: true },
+          { name: "includeCaptions", label: "Include captions", type: "checkbox", checked: true },
+          {
+            name: "warning",
+            label: "Export note",
+            type: "html",
+            html: hasRealDocx
+              ? '<p class="nw-modal-help">A DOCX export adapter is available. Real .docx export will be used when selected.</p>'
+              : '<p class="nw-modal-help">Real DOCX export requires the optional DOCX export adapter. A Word-compatible .doc file will be exported instead.</p>',
+          },
+        ],
+        onOpen: (fieldRefs) => {
+          const updateFilename = () => {
+            const mode = fieldRefs.mode.value === "docx" && hasRealDocx ? "docx" : "doc";
+            fieldRefs.filename.value = normalizeDocFilename(fieldRefs.filename.value, mode);
+          };
+          fieldRefs.mode.addEventListener("change", updateFilename);
+          updateFilename();
+        },
+        onConfirm: async (values) => {
+          const result = await this.exportDOCX({
+            filename: values.filename,
+            title: values.title || "OllowEditor Export",
+            includeTitle: Boolean(values.includeTitle),
+            includeImages: Boolean(values.includeImages),
+            includeCaptions: Boolean(values.includeCaptions),
+            mode: values.mode || "docx",
+            fallbackToDoc: true,
+          });
+          if (result && result.warning) {
+            this.showFeedback(result.warning);
+          }
+          return null;
+        },
+      });
+    }
+
     openModal(config) {
       this.saveSelection();
       if (this.wrapper) {
@@ -9003,6 +9071,172 @@
       } finally {
         this.clearFeedback();
       }
+    }
+
+    getDocxExporter() {
+      if (this.options.docx && this.options.docx.exportEnabled === false) {
+        return null;
+      }
+      return (this.options.docx && this.options.docx.exporter) || window.OllowDocxExporter || null;
+    }
+
+    buildDocxExportContentHtml(options) {
+      const config = Object.assign({
+        includeTitle: true,
+        includeImages: true,
+        includeCaptions: true,
+        title: "OllowEditor Export",
+      }, options || {});
+      const template = document.createElement("template");
+      template.innerHTML = this.getHTML();
+      const root = template.content;
+
+      Array.from(root.querySelectorAll("iframe[src]")).forEach((iframe) => {
+        const url = getYouTubeWatchUrl(iframe.getAttribute("src") || "") || iframe.getAttribute("src") || "";
+        const paragraph = document.createElement("p");
+        paragraph.innerHTML = url
+          ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`
+          : "Embedded video";
+        const figure = iframe.closest("figure, section, div");
+        if (figure && figure.querySelector("figcaption")) {
+          const caption = figure.querySelector("figcaption");
+          if (caption && caption.textContent.trim()) {
+            const captionLine = document.createElement("p");
+            captionLine.textContent = caption.textContent.trim();
+            paragraph.insertAdjacentElement("afterend", captionLine);
+          }
+        }
+        iframe.replaceWith(paragraph);
+      });
+
+      if (!config.includeImages) {
+        Array.from(root.querySelectorAll("img")).forEach((img) => img.remove());
+      }
+
+      if (!config.includeCaptions) {
+        Array.from(root.querySelectorAll("figcaption")).forEach((caption) => caption.remove());
+      }
+
+      Array.from(root.querySelectorAll(`.${BOOKMARK_CLASS}[data-bookmark="true"]`)).forEach((bookmark) => {
+        const anchor = document.createElement("a");
+        anchor.id = bookmark.id || "";
+        anchor.textContent = (bookmark.textContent || "").replace(/^🔖\s*/, "").trim();
+        bookmark.replaceWith(anchor);
+      });
+
+      const body = rootToHtml(root);
+      if (!config.includeTitle) {
+        return body.trim() || "<p>No editor content available for export.</p>";
+      }
+      return `<h1>${escapeHtml(config.title || "OllowEditor Export")}</h1>\n${body.trim() || "<p>No editor content available for export.</p>"}`;
+    }
+
+    buildWordCompatibleHtmlDocument(options) {
+      const config = Object.assign({
+        title: "OllowEditor Export",
+      }, options || {});
+      const body = this.buildDocxExportContentHtml(config);
+      return `<!doctype html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="utf-8">
+  <meta name="ProgId" content="Word.Document">
+  <meta name="Generator" content="OllowEditor">
+  <title>${escapeHtml(config.title || "OllowEditor Export")}</title>
+  <style>
+${this.getExportHTMLStyles()}
+body { padding: 24px; }
+.ollow-exported-content, body { width: auto; max-width: none; }
+pre { white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+<body>
+  <article class="ollow-exported-content">
+    ${body}
+  </article>
+</body>
+</html>`;
+    }
+
+    async exportDOCX(options) {
+      const config = Object.assign({
+        filename: "",
+        title: "OllowEditor Export",
+        includeTitle: true,
+        includeImages: true,
+        includeCaptions: true,
+        mode: "docx",
+        fallbackToDoc: true,
+      }, options || {});
+      this.sync({ autosave: false, preserveDirty: true, silent: true });
+      const exporter = this.getDocxExporter();
+      const wantsDocx = config.mode !== "doc";
+      const bodyHtml = this.buildDocxExportContentHtml(config);
+
+      if (wantsDocx && exporter && typeof exporter.export === "function") {
+        const result = await exporter.export({
+          editor: this,
+          title: config.title,
+          html: bodyHtml,
+          includeImages: config.includeImages,
+          includeCaptions: config.includeCaptions,
+          filename: normalizeDocFilename(config.filename || "ollow-export.docx", "docx"),
+        });
+        const blob = result instanceof Blob
+          ? result
+          : result && result.blob instanceof Blob
+            ? result.blob
+            : result && (result.arrayBuffer || result.uint8Array)
+              ? new Blob([result.arrayBuffer || result.uint8Array], {
+                type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              })
+              : null;
+        if (!blob) {
+          throw new Error("DOCX exporter did not return a downloadable file.");
+        }
+        const filename = normalizeDocFilename((result && result.filename) || config.filename || "ollow-export.docx", "docx");
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 0);
+        const detail = { filename, format: "docx" };
+        this.textarea.dispatchEvent(new CustomEvent("ollow-editor:export-docx", {
+          bubbles: true,
+          detail: Object.assign({ editor: this }, detail),
+        }));
+        this.emit("exportdocx", Object.assign({ editor: this }, detail));
+        return { success: true, format: "docx" };
+      }
+
+      if (!config.fallbackToDoc) {
+        throw new Error("Real DOCX export requires the optional DOCX export adapter.");
+      }
+
+      const html = this.buildWordCompatibleHtmlDocument(config);
+      const filename = normalizeDocFilename(config.filename || "ollow-export.doc", "doc");
+      const blob = new Blob([html], { type: "application/msword;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      const warning = "Real DOCX export requires the optional DOCX export adapter. A Word-compatible .doc file was exported instead.";
+      const detail = { filename, format: "doc", warning };
+      this.textarea.dispatchEvent(new CustomEvent("ollow-editor:export-docx", {
+        bubbles: true,
+        detail: Object.assign({ editor: this }, detail),
+      }));
+      this.emit("exportdocx", Object.assign({ editor: this }, detail));
+      return { success: true, format: "doc", warning };
     }
 
     exportMarkdown() {

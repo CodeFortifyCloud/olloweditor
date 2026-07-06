@@ -2145,6 +2145,10 @@
   width: min(92vw, 640px);
 }
 
+.ollow-export-docx-panel {
+  width: min(92vw, 680px);
+}
+
 .ollow-print-frame {
   position: fixed;
   left: -10000px;
@@ -2160,6 +2164,13 @@
   min-height: 320px;
   font: 12px/1.65 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   white-space: pre;
+}
+
+.nw-modal-help {
+  margin: 0;
+  color: var(--nw-text-soft);
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .nw-editor-modal-panel {
