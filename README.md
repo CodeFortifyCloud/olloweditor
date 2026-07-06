@@ -445,6 +445,8 @@ Behavior:
 - this avoids popup blockers in most browsers
 - from there the browser's `Save as PDF` flow is used
 - unsafe UI elements and temporary editor state are not included
+- source URL is only rendered in the PDF body when `Include source URL` is enabled
+- to remove browser-added date, title, URL, and page number, disable `Headers and footers` in the print dialog
 - if iframe printing is blocked or fails, OllowEditor downloads a printable HTML file as a fallback
 
 Public API:

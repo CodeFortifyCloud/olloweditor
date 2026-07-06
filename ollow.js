@@ -8322,6 +8322,12 @@
           { name: "includeTitle", label: "Include title", type: "checkbox", checked: true },
           { name: "includeDate", label: "Include date", type: "checkbox", checked: false },
           { name: "includeSourceUrl", label: "Include source URL", type: "checkbox", checked: false },
+          {
+            name: "printTip",
+            label: "Print tip",
+            type: "html",
+            html: '<p class="nw-modal-help">Tip: In the browser print dialog, disable <strong>Headers and footers</strong> to remove the date, page title, URL, and page number from the PDF.</p>',
+          },
         ],
         onConfirm: async (values) => {
           try {
@@ -9001,7 +9007,7 @@ body {
 
     buildPdfExportArticle(html, options) {
       const wrapper = document.createElement("div");
-      wrapper.innerHTML = `<article class="ollow-exported-content">${html}</article>`;
+      wrapper.innerHTML = `<main class="ollow-pdf-document"><article class="ollow-exported-content">${html || ""}</article></main>`;
       Array.from(wrapper.querySelectorAll("iframe[src]")).forEach((iframe) => {
         const src = iframe.getAttribute("src");
         if (!src) return;
@@ -9016,8 +9022,13 @@ body {
         link.appendChild(anchor);
         iframe.insertAdjacentElement("afterend", link);
       });
-      const article = wrapper.firstElementChild;
-      if (!article) return "";
+      const documentRoot = wrapper.firstElementChild;
+      const article = documentRoot && documentRoot.querySelector(".ollow-exported-content");
+      if (!documentRoot || !article) return '<main class="ollow-pdf-document"><article class="ollow-exported-content"><p>No editor content available for export.</p></article></main>';
+
+      if (!article.innerHTML.trim()) {
+        article.innerHTML = "<p>No editor content available for export.</p>";
+      }
 
       const meta = document.createElement("header");
       meta.className = "ollow-export-meta";
@@ -9043,7 +9054,7 @@ body {
       if (hasMeta) {
         article.insertAdjacentElement("afterbegin", meta);
       }
-      return article.outerHTML;
+      return documentRoot.outerHTML;
     }
 
     buildPdfExportDocument(options) {
@@ -9079,11 +9090,36 @@ ${this.getExportPDFStyles(options)}
       window.setTimeout(() => URL.revokeObjectURL(url), 0);
     }
 
+    waitForPrintDocumentReady(doc) {
+      const waitForFonts = doc.fonts && doc.fonts.ready
+        ? doc.fonts.ready.catch(() => undefined)
+        : Promise.resolve();
+      const images = Array.from(doc.images || []);
+      const waitForImages = Promise.all(images.map((img) => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          const done = () => resolve();
+          img.addEventListener("load", done, { once: true });
+          img.addEventListener("error", done, { once: true });
+          window.setTimeout(done, 1500);
+        });
+      }));
+      return Promise.all([waitForFonts, waitForImages]).then(() => undefined);
+    }
+
     printHtmlWithIframe(html) {
       return new Promise((resolve, reject) => {
         const iframe = document.createElement("iframe");
         iframe.className = "ollow-print-frame";
         iframe.setAttribute("title", "OllowEditor PDF export");
+        iframe.style.position = "fixed";
+        iframe.style.left = "-10000px";
+        iframe.style.top = "0";
+        iframe.style.width = "794px";
+        iframe.style.height = "1123px";
+        iframe.style.border = "0";
+        iframe.style.opacity = "0";
+        iframe.style.pointerEvents = "none";
 
         let cleanedUp = false;
         let printTriggered = false;
@@ -9113,7 +9149,7 @@ ${this.getExportPDFStyles(options)}
           reject(error);
         };
 
-        const triggerPrint = () => {
+        const triggerPrint = async () => {
           if (printTriggered) return;
           printTriggered = true;
           try {
@@ -9122,10 +9158,16 @@ ${this.getExportPDFStyles(options)}
             if (!iframeWindow || !iframeDocument) {
               throw new Error("Print iframe is unavailable.");
             }
+            await this.waitForPrintDocumentReady(iframeDocument);
+            await new Promise((resolveFrame) => {
+              iframeWindow.requestAnimationFrame
+                ? iframeWindow.requestAnimationFrame(() => resolveFrame())
+                : window.setTimeout(resolveFrame, 60);
+            });
             iframeWindow.onafterprint = () => complete();
             iframeWindow.focus();
             iframeWindow.print();
-            window.setTimeout(() => complete(), 1200);
+            window.setTimeout(() => complete(), 2000);
           } catch (error) {
             fail(error);
           }
@@ -9143,7 +9185,9 @@ ${this.getExportPDFStyles(options)}
           iframeDocument.open();
           iframeDocument.write(html);
           iframeDocument.close();
-          window.setTimeout(triggerPrint, 180);
+          window.setTimeout(() => {
+            triggerPrint();
+          }, 250);
         } catch (error) {
           fail(error);
         }
@@ -9174,7 +9218,7 @@ ${this.getExportPDFStyles(options)}
       this.emit("exportpdf", Object.assign({ html }, detail));
       return this.printHtmlWithIframe(html).catch((error) => {
         this.downloadPrintableHTML(html, "olloweditor-export.html");
-        this.showFeedback("Print dialog unavailable. Downloaded printable HTML instead.");
+        this.showFeedback("Print dialog could not be opened. Downloaded printable HTML instead.");
         throw new Error(error && error.message ? error.message : "Unable to open the print dialog.");
       });
     }
