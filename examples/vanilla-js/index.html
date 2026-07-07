@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OllowEditor</title>
+  <title>OllowEditor Vanilla JavaScript</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="ollow.css">
+  <link rel="stylesheet" href="../../src/styles/ollow-editor.css">
   <style>
     body {
       margin: 0;
@@ -117,13 +117,19 @@
 <blockquote><p>Markets reacted with cautious optimism.</p></blockquote>
 <ul><li>First verified point</li><li>Second verified point</li></ul>
       </textarea>
+      <button type="submit" class="demo-submit">Sync HTML</button>
     </form>
+    <section class="demo-card">
+      <h2>Synced HTML output</h2>
+      <pre id="submitted-html" class="demo-source"></pre>
+    </section>
   </div>
 </main>
 
 <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="ollow.js"></script>
-<script>
+<script type="module">
+  import OllowEditor, { NationWireEditor } from "../../src/index.js";
+
   OllowEditor.registerPlugin("alertBox", function(editor, options) {
     const label = options.label || "Alert";
     editor.addSanitizerRule({

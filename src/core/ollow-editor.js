@@ -1,4 +1,4 @@
-(function () {
+const globalScope = typeof window !== "undefined" ? window : globalThis;
   const DEFAULT_SELECTOR = 'textarea[data-nw-editor], textarea[data-ollow-editor]';
   const DEFAULT_AUTOSAVE_DELAY = 1500;
   const DEFAULT_PLACEHOLDER = "Start writing your story here…";
@@ -11954,6 +11954,13 @@ ${this.getExportPDFStyles(options)}
     },
   };
 
-  window.NationWireEditor = api;
-  window.OllowEditor = api;
-})();
+  if (typeof window !== "undefined") {
+    window.NationWireEditor = api;
+    window.OllowEditor = api;
+  } else if (globalScope) {
+    globalScope.NationWireEditor = api;
+    globalScope.OllowEditor = api;
+  }
+
+export { api as NationWireEditor, api as OllowEditor };
+export default api;

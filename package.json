@@ -1,0 +1,58 @@
+{
+  "name": "olloweditor",
+  "version": "0.1.0",
+  "description": "Reusable rich-text editor for JavaScript, React, MERN, Node, Vue, Next.js, and NestJS applications.",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./src/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/types/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./react": {
+      "types": "./src/types/react.d.ts",
+      "import": "./src/react/index.js",
+      "default": "./src/react/index.js"
+    },
+    "./styles.css": "./src/styles/ollow-editor.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "*.css",
+    "**/*.css"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.9",
+    "typescript": "^5.9.2",
+    "vite": "^7.0.0"
+  },
+  "keywords": [
+    "editor",
+    "rich-text-editor",
+    "react-editor",
+    "typescript",
+    "vue-editor",
+    "nextjs-editor",
+    "nestjs-editor",
+    "mern"
+  ],
+  "license": "MIT"
+}
