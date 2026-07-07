@@ -2269,6 +2269,8 @@
       this.tabletOverflowButton = null;
       this.tabletOverflowMenu = null;
       this.tabletOverflowItems = {};
+      this.overflowMenuAnchor = null;
+      this.boundOverflowScrollClose = this.closeOverflowMenu.bind(this);
       this.mobileToolbar = null;
       this.mobileToolbarButtons = {};
       this.actionDrawer = null;
@@ -2973,7 +2975,7 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "nw-insert-pill ollow-toolbar-pill ollow-tablet-overflow-button ollow-overflow-button";
-      button.dataset.command = "overflow";
+      button.dataset.ollowOverflowToggle = "true";
       button.setAttribute("aria-haspopup", "menu");
       button.setAttribute("aria-expanded", "false");
       button.title = "More tools";
@@ -2983,12 +2985,14 @@
         event.preventDefault();
         this.saveSelection();
       });
-      button.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        this.toggleOverflowMenu();
-      });
 
+      wrapper.appendChild(button);
+      this.tabletOverflowControl = wrapper;
+      this.tabletOverflowButton = button;
+      return wrapper;
+    }
+
+    createOverflowMenu() {
       const menu = document.createElement("div");
       menu.className = "ollow-tablet-overflow-menu ollow-overflow-menu";
       menu.hidden = true;
@@ -2998,20 +3002,19 @@
         event.preventDefault();
       });
       menu.addEventListener("click", (event) => {
-        const actionButton = event.target.closest("[data-overflow-command], [data-overflow-action]");
+        const actionButton = event.target.closest("[data-ollow-overflow-command], [data-overflow-command], [data-overflow-action]");
         if (!actionButton) return;
         event.preventDefault();
+        event.stopPropagation();
         this.closeOverflowMenu();
-        this.runResponsiveOverflowAction(actionButton.dataset.overflowCommand || actionButton.dataset.overflowAction);
+        this.runResponsiveOverflowAction(
+          actionButton.dataset.ollowOverflowCommand ||
+          actionButton.dataset.overflowCommand ||
+          actionButton.dataset.overflowAction
+        );
       });
-
-      wrapper.appendChild(button);
-      wrapper.appendChild(menu);
-      this.tabletOverflowControl = wrapper;
-      this.tabletOverflowButton = button;
       this.tabletOverflowMenu = menu;
-      this.rebuildResponsiveOverflowMenu();
-      return wrapper;
+      return menu;
     }
 
     rebuildResponsiveOverflowMenu() {
@@ -3045,6 +3048,7 @@
           const button = document.createElement("button");
           button.type = "button";
           button.className = "ollow-tablet-overflow-item ollow-overflow-item";
+          button.dataset.ollowOverflowCommand = item.id;
           button.dataset.overflowCommand = item.id;
           button.dataset.overflowAction = item.id;
           button.setAttribute("role", "menuitem");
@@ -3283,8 +3287,37 @@
       return shell;
     }
 
-    openOverflowMenu() {
-      if (!this.tabletOverflowMenu || !this.tabletOverflowButton) return;
+    positionOverflowMenu(button) {
+      if (!this.tabletOverflowMenu || !button) return;
+      const menu = this.tabletOverflowMenu;
+      const rect = button.getBoundingClientRect();
+      menu.style.top = "0px";
+      menu.style.left = "0px";
+      const menuWidth = menu.offsetWidth || 260;
+      const menuHeight = menu.offsetHeight || 320;
+      const viewportPadding = 12;
+      let left = Math.min(rect.left, window.innerWidth - menuWidth - viewportPadding);
+      left = Math.max(viewportPadding, left);
+      let top = rect.bottom + 8;
+      if (top + menuHeight > window.innerHeight - viewportPadding) {
+        top = Math.max(viewportPadding, rect.top - menuHeight - 8);
+      }
+      menu.style.left = `${Math.round(left)}px`;
+      menu.style.top = `${Math.round(top)}px`;
+    }
+
+    openOverflowMenu(button) {
+      const trigger = button || this.overflowMenuAnchor || this.tabletOverflowButton;
+      if (!trigger) return;
+      if (!this.tabletOverflowMenu) {
+        this.createOverflowMenu();
+      }
+      if (!this.tabletOverflowMenu) return;
+      if (!this.tabletOverflowMenu.isConnected) {
+        document.body.appendChild(this.tabletOverflowMenu);
+      }
+      this.rebuildResponsiveOverflowMenu();
+      if (!Object.keys(this.tabletOverflowItems || {}).length) return;
       this.closeMenuDropdowns();
       this.closeStylesMenu();
       this.closeFontFamilyMenu();
@@ -3292,26 +3325,33 @@
       this.closeTextColorPopover();
       this.closeHighlightPopover();
       this.closeThemeMenu();
+      this.overflowMenuAnchor = trigger;
       this.tabletOverflowMenu.hidden = false;
       this.tabletOverflowMenu.classList.add("is-open");
-      this.tabletOverflowButton.setAttribute("aria-expanded", "true");
-      this.tabletOverflowButton.classList.add("is-active");
+      this.positionOverflowMenu(trigger);
+      trigger.setAttribute("aria-expanded", "true");
+      trigger.classList.add("is-active");
+      window.addEventListener("scroll", this.boundOverflowScrollClose, true);
     }
 
     closeOverflowMenu() {
-      if (!this.tabletOverflowMenu || !this.tabletOverflowButton) return;
+      if (!this.tabletOverflowMenu) return;
       this.tabletOverflowMenu.hidden = true;
       this.tabletOverflowMenu.classList.remove("is-open");
-      this.tabletOverflowButton.setAttribute("aria-expanded", "false");
-      this.tabletOverflowButton.classList.remove("is-active");
+      window.removeEventListener("scroll", this.boundOverflowScrollClose, true);
+      const trigger = this.overflowMenuAnchor || this.tabletOverflowButton;
+      if (trigger) {
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.classList.remove("is-active");
+      }
+      this.overflowMenuAnchor = null;
     }
 
-    toggleOverflowMenu() {
-      if (!this.tabletOverflowMenu) return;
-      if (this.tabletOverflowMenu.hidden) {
-        this.openOverflowMenu();
-      } else {
+    toggleOverflowMenu(button) {
+      if (this.tabletOverflowMenu && !this.tabletOverflowMenu.hidden) {
         this.closeOverflowMenu();
+      } else {
+        this.openOverflowMenu(button);
       }
     }
 
@@ -6057,6 +6097,14 @@
         }
       });
 
+      this.wrapper.addEventListener("click", (event) => {
+        const overflowButton = event.target.closest("[data-ollow-overflow-toggle='true']");
+        if (!overflowButton || !this.wrapper.contains(overflowButton)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        this.toggleOverflowMenu(overflowButton);
+      });
+
       this.headingSelect.addEventListener("change", () => {
         this.applyBlock(this.headingSelect.value);
       });
@@ -6260,6 +6308,7 @@
       if (
         (this.menuBar && this.menuBar.contains(event.target)) ||
         (this.tabletOverflowControl && this.tabletOverflowControl.contains(event.target)) ||
+        (this.tabletOverflowMenu && this.tabletOverflowMenu.contains(event.target)) ||
         (this.mobileToolbar && this.mobileToolbar.contains(event.target)) ||
         (this.actionDrawer && this.actionDrawer.contains(event.target)) ||
         (this.fontFamilyMenu && this.fontFamilyMenu.contains(event.target)) ||
@@ -11103,6 +11152,7 @@ ${this.getExportPDFStyles(options)}
       window.removeEventListener("scroll", this.boundRepositionBookmarkToolbar, true);
       window.removeEventListener("resize", this.boundViewportChange);
       window.removeEventListener("orientationchange", this.boundViewportChange);
+      window.removeEventListener("scroll", this.boundOverflowScrollClose, true);
       document.removeEventListener("pointermove", this.boundImageResizeMove);
       document.removeEventListener("pointerup", this.boundImageResizeEnd);
       document.removeEventListener("pointercancel", this.boundImageResizeEnd);
@@ -11116,6 +11166,9 @@ ${this.getExportPDFStyles(options)}
             formBindings.delete(this.textarea.form);
           }
         }
+      }
+      if (this.tabletOverflowMenu && this.tabletOverflowMenu.parentNode) {
+        this.tabletOverflowMenu.parentNode.removeChild(this.tabletOverflowMenu);
       }
       if (this.wrapper) {
         this.wrapper.remove();

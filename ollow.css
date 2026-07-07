@@ -233,12 +233,12 @@
   display: inline-flex;
 }
 
-.ollow-tablet-overflow-menu {
-  position: absolute;
+.ollow-overflow-menu {
+  position: fixed;
   display: none;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 10030;
+  top: 0;
+  left: 0;
+  z-index: 9999;
   min-width: 240px;
   max-width: min(320px, calc(100vw - 40px));
   max-height: min(70vh, 520px);
@@ -252,6 +252,10 @@
 
 .ollow-overflow-menu.is-open {
   display: block;
+}
+
+.ollow-overflow-menu[hidden] {
+  display: none !important;
 }
 
 .ollow-tablet-overflow-heading {
