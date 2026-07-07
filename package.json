@@ -53,6 +53,7 @@
   ],
   "scripts": {
     "dev": "vite",
+    "start": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
