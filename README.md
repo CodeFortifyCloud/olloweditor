@@ -252,6 +252,41 @@ At narrower mobile widths, the editor falls back to the existing horizontal-scro
 
 ---
 
+## Mobile Toolbar
+
+At `480px` and below, Ollow Editor switches to a mobile editing layout:
+
+- the desktop and tablet toolbar rows are replaced by a compact mobile toolbar
+- the visible row keeps the highest-frequency actions: undo, redo, style, bold, italic, link, image, and more
+- the `More` button opens a bottom-sheet action drawer with sections for text formatting, paragraph tools, insert actions, import/export, and view/tools
+
+The mobile drawer reuses the same editor commands as the desktop and tablet toolbars. It is only a different interaction layer for small screens, not a separate feature set.
+
+---
+
+## Overflow Menu
+
+Less-used commands are managed through a responsive overflow system instead of keeping every tool visible all the time.
+
+- on desktop, rare export and utility commands move into a `More` menu
+- on tablet, the overflow menu grows and absorbs more low-frequency actions
+- on mobile, those same lower-priority actions remain available through the bottom-sheet `More` drawer
+
+The `More` button opens the overflow menu on desktop and tablet. Overflow items reuse the same command handlers as the visible toolbar buttons. The responsive command metadata controls which actions stay visible and which actions move into overflow at each breakpoint.
+
+---
+
+## Icon System
+
+The toolbar uses an internal inline SVG icon map. There is no external icon library dependency.
+
+- icons share the same sizing, stroke weight, and `currentColor` behavior
+- icon buttons and pill buttons use the same `ollow-icon` and `ollow-label` structure
+- desktop, tablet, mobile, overflow, and drawer actions all render from the same icon set
+- accessibility is kept through explicit `title` and `aria-label` attributes on every icon-first button
+
+---
+
 ## Keyboard Shortcuts
 
 Shortcuts run only while the editor body is focused. They do not fire inside modal inputs, textareas, selects, file pickers, or other page form fields.

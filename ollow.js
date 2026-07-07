@@ -1909,60 +1909,103 @@
     return null;
   }
 
+  function createIconSvg(content, viewBox) {
+    return `<svg viewBox="${viewBox || "0 0 20 20"}" fill="none" aria-hidden="true" focusable="false">${content}</svg>`;
+  }
+
+  function createGlyphIcon(glyph, options) {
+    const config = Object.assign({ size: 11.5, weight: 700, italic: false, decoration: "" }, options || {});
+    const decoration = config.decoration === "underline"
+      ? '<path d="M5 16h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'
+      : config.decoration === "strikethrough"
+        ? '<path d="M5 9.8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'
+        : "";
+    return createIconSvg(
+      `${decoration}<text x="10" y="13.2" text-anchor="middle" font-size="${config.size}" font-weight="${config.weight}" ${config.italic ? 'font-style="italic"' : ""} fill="currentColor" font-family="Inter, Arial, sans-serif">${glyph}</text>`
+    );
+  }
+
+  const ICONS = {
+    undo: createIconSvg('<path d="M8 6H4v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 9a6 6 0 1 1 2.1 4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    redo: createIconSvg('<path d="M12 6h4v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 9a6 6 0 1 0-2.1 4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    bold: createGlyphIcon("B"),
+    italic: createGlyphIcon("I", { italic: true }),
+    underline: createGlyphIcon("U", { decoration: "underline" }),
+    strikethrough: createGlyphIcon("S", { decoration: "strikethrough" }),
+    subscript: createIconSvg('<text x="7.4" y="12.2" font-size="10.5" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">x</text><text x="12.4" y="15.4" font-size="7" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">2</text>'),
+    superscript: createIconSvg('<text x="6.8" y="13.2" font-size="10.5" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">x</text><text x="12.3" y="8.6" font-size="7" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">2</text>'),
+    "remove-formatting": createIconSvg('<path d="M5 5h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 5v9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m4 15 12-10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m13 14 3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    link: createIconSvg('<path d="M8 11.5 6.5 13a2.5 2.5 0 0 1-3.5-3.5L6 6.5A2.5 2.5 0 0 1 9.5 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 8.5 13.5 7a2.5 2.5 0 0 1 3.5 3.5L14 13.5A2.5 2.5 0 0 1 10.5 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7.5 12.5 12.5 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'),
+    unlink: createIconSvg('<path d="M8.5 11.5 7 13a2.5 2.5 0 1 1-3.5-3.5L6.5 6.5A2.5 2.5 0 0 1 10 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 8l1-1a2.5 2.5 0 1 1 3.5 3.5L13.5 13.5A2.5 2.5 0 0 1 10 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4 16 16 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'),
+    "bulleted-list": createIconSvg('<circle cx="4.3" cy="5.6" r="1.1" fill="currentColor"/><circle cx="4.3" cy="10" r="1.1" fill="currentColor"/><circle cx="4.3" cy="14.4" r="1.1" fill="currentColor"/><path d="M7 5.6h9M7 10h9M7 14.4h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    "numbered-list": createIconSvg('<text x="3.8" y="6.4" text-anchor="middle" font-size="4.4" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">1</text><text x="3.8" y="10.8" text-anchor="middle" font-size="4.4" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">2</text><text x="3.8" y="15.2" text-anchor="middle" font-size="4.4" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">3</text><path d="M7 5.6h9M7 10h9M7 14.4h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    quote: createIconSvg('<path d="M5.5 7.2h3v3.1a3 3 0 0 1-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.5 7.2h3v3.1a3 3 0 0 1-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'),
+    "horizontal-rule": createIconSvg('<path d="M3 10h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'),
+    "align-left": createIconSvg('<path d="M3 5h14M3 8h10M3 11h14M3 14h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    "align-center": createIconSvg('<path d="M3 5h14M5 8h10M3 11h14M6 14h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    "align-right": createIconSvg('<path d="M3 5h14M7 8h10M3 11h14M8 14h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    "align-justify": createIconSvg('<path d="M3 5h14M3 8h14M3 11h14M3 14h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    image: createIconSvg('<rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><circle cx="7.2" cy="8" r="1.2" fill="currentColor"/><path d="m6 13 3-3 2.4 2.4L13.5 10l2.5 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'),
+    gallery: createIconSvg('<rect x="3" y="5" width="9" height="9" rx="1.8" stroke="currentColor" stroke-width="1.6"/><rect x="9" y="3" width="8" height="8" rx="1.8" stroke="currentColor" stroke-width="1.6"/><path d="m5.5 11 1.8-1.8 1.5 1.5 1.5-2 1.4 2.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>'),
+    embed: createIconSvg('<rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="m8 8 4 2-4 2V8Z" fill="currentColor"/>'),
+    related: createIconSvg('<rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M6 7h8M6 10h5M11.5 12.5H14M11 9.5l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'),
+    "fact-box": createIconSvg('<rect x="4" y="3.5" width="12" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 7.5h6M7 10.5h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="13.5" r="1" fill="currentColor"/>'),
+    attachment: createIconSvg('<path d="M7.5 10.2 11.8 5.9a2.2 2.2 0 1 1 3.1 3.1l-5.8 5.8a3.5 3.5 0 1 1-4.9-4.9l5.3-5.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'),
+    table: createIconSvg('<rect x="3" y="4" width="14" height="12" rx="1.6" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h14M3 12h14M8 4v12M12.5 4v12" stroke="currentColor" stroke-width="1.4"/>'),
+    code: createIconSvg('<path d="m7 6-4 4 4 4M13 6l4 4-4 4M11 5l-2 10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'),
+    bookmark: createIconSvg('<path d="M6 3.5h8a1 1 0 0 1 1 1v12l-5-3-5 3v-12a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>'),
+    "special-characters": createGlyphIcon("Ω", { size: 12.5 }),
+    emoji: createIconSvg('<circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.6"/><circle cx="7.5" cy="8.2" r="0.8" fill="currentColor"/><circle cx="12.5" cy="8.2" r="0.8" fill="currentColor"/><path d="M7 12c.8 1 1.8 1.5 3 1.5S12.2 13 13 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'),
+    "find-replace": createIconSvg('<circle cx="8.5" cy="8.5" r="4.5" stroke="currentColor" stroke-width="1.6"/><path d="m12 12 4 4M7 8.5h3M8.5 7v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'),
+    "source-html": createIconSvg('<path d="m7 6-4 4 4 4M13 6l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'),
+    import: createIconSvg('<path d="M10 3v9M6.8 9.3 10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15.5h12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    export: createIconSvg('<path d="M10 13V4M13.2 7.7 10 4.5 6.8 7.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15.5h12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    pdf: createIconSvg('<rect x="4" y="3.5" width="12" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 7.2h4.5M8 10h4.5M8 12.8h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><text x="13.2" y="15.2" text-anchor="middle" font-size="4.4" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">PDF</text>'),
+    docx: createIconSvg('<rect x="4" y="3.5" width="12" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><text x="10" y="12.2" text-anchor="middle" font-size="5.6" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">DOC</text>'),
+    markdown: createIconSvg('<text x="10" y="12" text-anchor="middle" font-size="6.5" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">MD</text><path d="M4 6.5v7M16 6.5v7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>'),
+    "theme-light": createIconSvg('<circle cx="10" cy="10" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>'),
+    "theme-dark": createIconSvg('<path d="M13.8 3.6A6.7 6.7 0 1 0 16.4 13a5.6 5.6 0 1 1-2.6-9.4Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'),
+    "theme-auto": createIconSvg('<rect x="3.5" y="4.5" width="13" height="9" rx="1.8" stroke="currentColor" stroke-width="1.6"/><path d="M7.5 16h5M10 13.5V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'),
+    more: createIconSvg('<circle cx="5" cy="10" r="1.2" fill="currentColor"/><circle cx="10" cy="10" r="1.2" fill="currentColor"/><circle cx="15" cy="10" r="1.2" fill="currentColor"/>'),
+    close: createIconSvg('<path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'),
+    pullquote: createIconSvg('<path d="M5.5 7.2h3v3.1a3 3 0 0 1-3 3M11.5 7.2h3v3.1a3 3 0 0 1-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'),
+    styles: createIconSvg('<path d="M5 5.2h10M5 9.2h6M5 13.2h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M14.5 12.2h2.5v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'),
+    "font-family": createIconSvg('<path d="M5.5 14.5 9 5.5h2l3.5 9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.8 11h6.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'),
+    "font-size": createIconSvg('<text x="6.2" y="13" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">A</text><text x="13.4" y="14.8" text-anchor="middle" font-size="11.5" font-weight="700" fill="currentColor" font-family="Inter, Arial, sans-serif">A</text>'),
+    "text-color": createIconSvg('<path d="M6.5 14.5 10 5.5h2l3.5 9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.8 11h6.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 17h10" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round"/>'),
+    highlight: createIconSvg('<path d="M6 12.5 11.8 6.7l2.5 2.5-5.8 5.8H6v-2.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M5 16h10" stroke="#ca8a04" stroke-width="1.8" stroke-linecap="round"/>'),
+    edit: createIconSvg('<path d="M4 14.5V16h1.5L14 7.5 12.5 6 4 14.5Z" fill="currentColor"/><path d="M11.8 6.7 13.3 5.2 14.8 6.7 13.3 8.2Z" fill="currentColor"/>'),
+    replace: createIconSvg('<path d="M4 6h8l-2.5-2.5L11 2l5 5-5 5-1.5-1.5L12 8H4V6Zm12 8H8l2.5 2.5L9 18l-5-5 5-5 1.5 1.5L8 12h8v2Z" fill="currentColor"/>'),
+    copy: createIconSvg('<path d="M7 7h8v10H7z" stroke="currentColor" stroke-width="1.6" rx="1.5"/><path d="M5 13H4a1 1 0 0 1-1-1V3.8a1 1 0 0 1 1-1h7.2a1 1 0 0 1 1 1V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'),
+    external: createIconSvg('<path d="M11 3h6v6h-2V6.4l-6.3 6.3-1.4-1.4L13.6 5H11V3Z" fill="currentColor"/><path d="M5 5h4v2H7v6h6v-2h2v4H5V5Z" fill="currentColor"/>'),
+    delete: createIconSvg('<path d="M6 6h8l-.7 10H6.7L6 6Zm2-3h4l1 1.5H16V6H4V4.5h3L8 3Z" fill="currentColor"/>'),
+    reset: createIconSvg('<path d="M10 4a6 6 0 1 1-5.3 3.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 2.8v4h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'),
+    plus: createIconSvg('<path d="M10 4.5v11M4.5 10h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'),
+    minus: createIconSvg('<path d="M4.5 10h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'),
+  };
+
+  function getIcon(name) {
+    return ICONS[name] || "";
+  }
+
+  function renderIcon(name, extraClass) {
+    return `<span class="ollow-icon${extraClass ? ` ${extraClass}` : ""}" aria-hidden="true">${getIcon(name)}</span>`;
+  }
+
+  function renderIconLabel(name, label, labelClass) {
+    return `${renderIcon(name)}<span class="${labelClass || "ollow-label"}">${label}</span>`;
+  }
+
   function getAlignmentIcon(alignment) {
-    const paths = {
-      left: ["M3 5h14", "M3 8h10", "M3 11h14", "M3 14h9"],
-      center: ["M3 5h14", "M5 8h10", "M3 11h14", "M6 14h8"],
-      right: ["M3 5h14", "M7 8h10", "M3 11h14", "M8 14h9"],
-      justify: ["M3 5h14", "M3 8h14", "M3 11h14", "M3 14h14"],
-    };
-    return `<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">${(paths[alignment] || paths.left).map((path) => `<path d="${path}" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`).join("")}</svg>`;
+    return getIcon(`align-${alignment}`);
   }
 
   function getThemeIcon(theme) {
-    if (theme === "dark") {
-      return `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 1 0 9.8 9.8Z"></path>
-        </svg>
-      `;
-    }
-    if (theme === "auto") {
-      return `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="4" width="18" height="12" rx="2"></rect>
-          <path d="M8 20h8"></path>
-          <path d="M12 16v4"></path>
-        </svg>
-      `;
-    }
-    return `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="4"></circle>
-        <path d="M12 2v2.5"></path>
-        <path d="M12 19.5V22"></path>
-        <path d="m4.93 4.93 1.77 1.77"></path>
-        <path d="m17.3 17.3 1.77 1.77"></path>
-        <path d="M2 12h2.5"></path>
-        <path d="M19.5 12H22"></path>
-        <path d="m4.93 19.07 1.77-1.77"></path>
-        <path d="m17.3 6.7 1.77-1.77"></path>
-      </svg>
-    `;
+    return getIcon(`theme-${theme}`);
   }
 
   function getInlineToolbarIcon(name) {
-    const icons = {
-      edit: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 14.5V16h1.5L14 7.5 12.5 6 4 14.5Z" fill="currentColor"></path><path d="M11.8 6.7 13.3 5.2 14.8 6.7 13.3 8.2Z" fill="currentColor"></path></svg>',
-      replace: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 6h8l-2.5-2.5L11 2l5 5-5 5-1.5-1.5L12 8H4V6Zm12 8H8l2.5 2.5L9 18l-5-5 5-5 1.5 1.5L8 12h8v2Z" fill="currentColor"></path></svg>',
-      link: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M8 11.5 6.5 13a2.5 2.5 0 0 1-3.5-3.5L6 6.5A2.5 2.5 0 0 1 9.5 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 8.5 13.5 7a2.5 2.5 0 0 1 3.5 3.5L14 13.5A2.5 2.5 0 0 1 10.5 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7.5 12.5 12.5 7.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
-      copy: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M7 7h8v10H7z" fill="none" stroke="currentColor" stroke-width="1.6" rx="1.5"/><path d="M5 13H4a1 1 0 0 1-1-1V3.8a1 1 0 0 1 1-1h7.2a1 1 0 0 1 1 1V5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      external: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M11 3h6v6h-2V6.4l-6.3 6.3-1.4-1.4L13.6 5H11V3Z" fill="currentColor"></path><path d="M5 5h4v2H7v6h6v-2h2v4H5V5Z" fill="currentColor"></path></svg>',
-      unlink: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M8.5 11.5 7 13a2.5 2.5 0 1 1-3.5-3.5L6.5 6.5A2.5 2.5 0 0 1 10 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 8l1-1a2.5 2.5 0 1 1 3.5 3.5L13.5 13.5A2.5 2.5 0 0 1 10 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4 16 16 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
-      delete: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6 6h8l-.7 10H6.7L6 6Zm2-3h4l1 1.5H16V6H4V4.5h3L8 3Z" fill="currentColor"></path></svg>',
-      reset: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 4a6 6 0 1 1-5.3 3.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 2.8v4h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-    };
-    return icons[name] || "";
+    return getIcon(name);
   }
 
   function getSelectionAncestor(root) {
@@ -2226,6 +2269,13 @@
       this.tabletOverflowButton = null;
       this.tabletOverflowMenu = null;
       this.tabletOverflowItems = {};
+      this.mobileToolbar = null;
+      this.mobileToolbarButtons = {};
+      this.actionDrawer = null;
+      this.actionDrawerBackdrop = null;
+      this.actionDrawerPanel = null;
+      this.actionDrawerSectionRefs = {};
+      this.actionDrawerLastFocus = null;
       this.headingSelect = null;
       this.formatPainterButton = null;
       this.formatPainterState = null;
@@ -2289,6 +2339,7 @@
 
     init() {
       this.build();
+      this.updateResponsiveToolbarMode();
       this.hideSource();
       this.setHTML(this.textarea.value || "", { skipSync: true, skipAutosave: true });
       this.bind();
@@ -2317,6 +2368,7 @@
       toolbar.appendChild(this.buildMenuBar());
       toolbar.appendChild(this.buildToolbarPrimary());
       toolbar.appendChild(this.buildToolbarInsert());
+      toolbar.appendChild(this.buildMobileToolbar());
 
       const surface = document.createElement("div");
       surface.className = "nw-editor-surface";
@@ -2371,12 +2423,14 @@
       this.statusSave = status.querySelector('[data-role="save-status"]');
 
       this.modal = this.buildModal();
+      this.actionDrawer = this.buildActionDrawer();
 
       card.appendChild(toolbar);
       card.appendChild(surface);
       card.appendChild(status);
       this.wrapper.appendChild(card);
       this.wrapper.appendChild(this.modal);
+      this.wrapper.appendChild(this.actionDrawer);
 
       this.textarea.insertAdjacentElement("afterend", this.wrapper);
     }
@@ -2551,6 +2605,269 @@
       ];
     }
 
+    getResponsiveCommandRegistry() {
+      return [
+        {
+          section: "Text formatting",
+          items: [
+            {
+              id: "format-painter",
+              label: "Format painter",
+              icon: "format-painter",
+              group: "format",
+              priority: 88,
+              showOnDesktop: false,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: false,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "remove-formatting",
+              label: "Remove formatting",
+              icon: "remove-formatting",
+              group: "format",
+              priority: 86,
+              showOnDesktop: true,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: false,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "subscript",
+              label: "Subscript",
+              icon: "subscript",
+              group: "format",
+              priority: 84,
+              showOnDesktop: true,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: false,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "superscript",
+              label: "Superscript",
+              icon: "superscript",
+              group: "format",
+              priority: 84,
+              showOnDesktop: true,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: false,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+          ],
+        },
+        {
+          section: "Tools",
+          items: [
+            {
+              id: "special-characters",
+              label: "Special character",
+              icon: "special-characters",
+              group: "tools",
+              priority: 72,
+              showOnDesktop: false,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: true,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "emoji",
+              label: "Emoji",
+              icon: "emoji",
+              group: "tools",
+              priority: 72,
+              showOnDesktop: false,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: true,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "bookmark",
+              label: "Bookmark",
+              icon: "bookmark",
+              group: "insert",
+              priority: 76,
+              showOnDesktop: true,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: false,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "find-replace",
+              label: "Find / Replace",
+              icon: "find-replace",
+              group: "tools",
+              priority: 80,
+              showOnDesktop: true,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: false,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "source-html",
+              label: "Source / HTML mode",
+              icon: "code",
+              group: "view",
+              priority: 82,
+              showOnDesktop: true,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: false,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+          ],
+        },
+        {
+          section: "Import / export",
+          items: [
+            {
+              id: "import-docx",
+              label: "Import DOCX",
+              icon: "import",
+              group: "export",
+              priority: 66,
+              showOnDesktop: false,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: true,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "export-docx",
+              label: "Export DOCX",
+              icon: "docx",
+              group: "export",
+              priority: 66,
+              showOnDesktop: false,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: true,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "export-html",
+              label: "Export HTML",
+              icon: "export",
+              group: "export",
+              priority: 64,
+              showOnDesktop: false,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: true,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "export-pdf",
+              label: "Export PDF",
+              icon: "pdf",
+              group: "export",
+              priority: 64,
+              showOnDesktop: false,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: true,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+          ],
+        },
+        {
+          section: "Blocks",
+          items: [
+            {
+              id: "related",
+              label: "Related",
+              icon: "related",
+              group: "insert",
+              priority: 60,
+              showOnDesktop: false,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: true,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "fact-box",
+              label: "Fact Box",
+              icon: "fact-box",
+              group: "insert",
+              priority: 60,
+              showOnDesktop: false,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: true,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+            {
+              id: "attachment",
+              label: "Attachment",
+              icon: "attachment",
+              group: "insert",
+              priority: 58,
+              showOnDesktop: false,
+              showOnTablet: false,
+              showOnMobile: false,
+              overflowOnDesktop: true,
+              overflowOnTablet: true,
+              overflowOnMobile: true,
+            },
+          ],
+        },
+      ];
+    }
+
+    getResponsiveCommandMeta(action) {
+      for (const section of this.getResponsiveCommandRegistry()) {
+        const match = (section.items || []).find((item) => item.id === action);
+        if (match) return match;
+      }
+      return null;
+    }
+
+    applyResponsiveCommandVisibility(button, action) {
+      if (!button || !action) return;
+      const meta = this.getResponsiveCommandMeta(action);
+      if (!meta) return;
+      if (meta.overflowOnDesktop) {
+        button.dataset.overflowDesktop = "true";
+      }
+      if (meta.overflowOnTablet) {
+        button.dataset.overflowTablet = "true";
+      }
+      if (meta.overflowOnMobile) {
+        button.dataset.overflowMobile = "true";
+      }
+    }
+
+    getOverflowViewportMode() {
+      if (typeof window === "undefined") return "desktop";
+      if (window.innerWidth <= 480) return "mobile";
+      if (window.innerWidth <= 1024) return "tablet";
+      return "desktop";
+    }
+
     openMenuDropdown(key) {
       const button = this.menuButtons[key];
       const dropdown = this.menuDropdowns[key];
@@ -2603,19 +2920,23 @@
           return;
         case "menu-font-family":
           this.openFontFamilyMenu();
-          if (this.fontFamilyButton) this.fontFamilyButton.focus();
+          if (!this.isMobileToolbarMode() && this.fontFamilyButton) this.fontFamilyButton.focus();
+          return;
+        case "menu-styles":
+          this.openStylesMenu();
+          if (!this.isMobileToolbarMode() && this.stylesButton) this.stylesButton.focus();
           return;
         case "menu-font-size":
           this.openFontSizeMenu();
-          if (this.fontSizeInput) this.fontSizeInput.focus();
+          if (!this.isMobileToolbarMode() && this.fontSizeInput) this.fontSizeInput.focus();
           return;
         case "menu-text-color":
           this.openTextColorPopover();
-          if (this.textColorButton) this.textColorButton.focus();
+          if (!this.isMobileToolbarMode() && this.textColorButton) this.textColorButton.focus();
           return;
         case "menu-highlight-color":
           this.openHighlightPopover();
-          if (this.highlightButton) this.highlightButton.focus();
+          if (!this.isMobileToolbarMode() && this.highlightButton) this.highlightButton.focus();
           return;
         case "format-painter":
           this.handleFormatPainterAction();
@@ -2651,23 +2972,25 @@
 
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "nw-insert-pill ollow-tablet-overflow-button";
+      button.className = "nw-insert-pill ollow-toolbar-pill ollow-tablet-overflow-button ollow-overflow-button";
+      button.dataset.command = "overflow";
       button.setAttribute("aria-haspopup", "menu");
       button.setAttribute("aria-expanded", "false");
       button.title = "More tools";
       button.setAttribute("aria-label", "More tools");
-      button.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">more_horiz</span>More';
+      button.innerHTML = renderIconLabel("more", "More");
       button.addEventListener("mousedown", (event) => {
         event.preventDefault();
         this.saveSelection();
       });
       button.addEventListener("click", (event) => {
         event.preventDefault();
-        this.toggleTabletOverflowMenu();
+        event.stopPropagation();
+        this.toggleOverflowMenu();
       });
 
       const menu = document.createElement("div");
-      menu.className = "ollow-tablet-overflow-menu";
+      menu.className = "ollow-tablet-overflow-menu ollow-overflow-menu";
       menu.hidden = true;
       menu.setAttribute("role", "menu");
       menu.setAttribute("aria-label", "More editor tools");
@@ -2675,71 +2998,11 @@
         event.preventDefault();
       });
       menu.addEventListener("click", (event) => {
-        const actionButton = event.target.closest("[data-overflow-action]");
+        const actionButton = event.target.closest("[data-overflow-command], [data-overflow-action]");
         if (!actionButton) return;
         event.preventDefault();
-        this.closeTabletOverflowMenu();
-        this.handleAction(actionButton.dataset.overflowAction);
-      });
-
-      const overflowSections = [
-        {
-          label: "Insert",
-          items: [
-            ["pull-quote", "Pull Quote", "format_quote"],
-            ["bookmark", "Bookmark", "bookmark"],
-            ["related", "Related", "article"],
-            ["fact-box", "Fact Box", "fact_check"],
-            ["attachment", "Attachment", "attach_file"],
-          ],
-        },
-        {
-          label: "Tools",
-          items: [
-            ["source-html", "HTML mode", ""],
-            ["find-replace", "Find / Replace", "search"],
-            ["special-characters", "Symbols", ""],
-            ["emoji", "Emoji", ""],
-          ],
-        },
-        {
-          label: "Import / Export",
-          items: [
-            ["import-docx", "Import DOCX", "upload_file"],
-            ["import-markdown", "Import Markdown", "upload_file"],
-            ["export-markdown", "Export Markdown", "download"],
-            ["export-html", "Export HTML", "download"],
-            ["export-pdf", "Export PDF", "print"],
-            ["export-docx", "Export DOCX", "download"],
-          ],
-        },
-      ];
-
-      overflowSections.forEach((section, sectionIndex) => {
-        if (sectionIndex > 0) {
-          const separator = document.createElement("div");
-          separator.className = "ollow-tablet-overflow-separator";
-          separator.setAttribute("role", "separator");
-          menu.appendChild(separator);
-        }
-
-        const heading = document.createElement("div");
-        heading.className = "ollow-tablet-overflow-heading";
-        heading.textContent = section.label;
-        menu.appendChild(heading);
-
-        section.items.forEach(([action, label, icon]) => {
-          const item = document.createElement("button");
-          item.type = "button";
-          item.className = "ollow-tablet-overflow-item";
-          item.dataset.overflowAction = action;
-          item.setAttribute("role", "menuitem");
-          item.innerHTML = icon
-            ? `<span class="material-symbols-outlined" aria-hidden="true">${icon}</span><span>${label}</span>`
-            : `<span class="ollow-special-char-pill-icon" aria-hidden="true">${action === "emoji" ? "☺" : action === "special-characters" ? "Ω" : "&lt;&gt;"}</span><span>${label}</span>`;
-          menu.appendChild(item);
-          this.tabletOverflowItems[action] = item;
-        });
+        this.closeOverflowMenu();
+        this.runResponsiveOverflowAction(actionButton.dataset.overflowCommand || actionButton.dataset.overflowAction);
       });
 
       wrapper.appendChild(button);
@@ -2747,10 +3010,280 @@
       this.tabletOverflowControl = wrapper;
       this.tabletOverflowButton = button;
       this.tabletOverflowMenu = menu;
+      this.rebuildResponsiveOverflowMenu();
       return wrapper;
     }
 
-    openTabletOverflowMenu() {
+    rebuildResponsiveOverflowMenu() {
+      if (!this.tabletOverflowMenu) return;
+      const mode = this.getOverflowViewportMode();
+      this.tabletOverflowMenu.innerHTML = "";
+      this.tabletOverflowItems = {};
+      if (mode === "mobile") return;
+
+      const registry = this.getResponsiveCommandRegistry();
+      const predicate = mode === "tablet"
+        ? (item) => item.overflowOnTablet
+        : (item) => item.overflowOnDesktop;
+
+      let hasAnyItems = false;
+      registry.forEach((section) => {
+        const items = (section.items || []).filter(predicate).sort((a, b) => (b.priority || 0) - (a.priority || 0));
+        if (!items.length) return;
+        if (hasAnyItems) {
+          const separator = document.createElement("div");
+          separator.className = "ollow-tablet-overflow-separator ollow-overflow-section";
+          separator.setAttribute("role", "separator");
+          this.tabletOverflowMenu.appendChild(separator);
+        }
+        hasAnyItems = true;
+        const heading = document.createElement("div");
+        heading.className = "ollow-tablet-overflow-heading ollow-overflow-section";
+        heading.textContent = section.section;
+        this.tabletOverflowMenu.appendChild(heading);
+        items.forEach((item) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "ollow-tablet-overflow-item ollow-overflow-item";
+          button.dataset.overflowCommand = item.id;
+          button.dataset.overflowAction = item.id;
+          button.setAttribute("role", "menuitem");
+          button.innerHTML = renderIconLabel(item.icon, item.label);
+          this.tabletOverflowMenu.appendChild(button);
+          this.tabletOverflowItems[item.id] = button;
+        });
+      });
+      if (this.tabletOverflowControl) {
+        this.tabletOverflowControl.hidden = !hasAnyItems;
+      }
+    }
+
+    runResponsiveOverflowAction(action) {
+      if (!action) return;
+      if (action.startsWith("menu-") || action.startsWith("theme-")) {
+        this.executeMenuAction(action);
+        return;
+      }
+      this.handleAction(action);
+    }
+
+    buildMobileToolbar() {
+      const row = document.createElement("div");
+      row.className = "ollow-mobile-toolbar";
+      row.hidden = true;
+
+      const createActionButton = (action, label, icon, className) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = className || "ollow-mobile-tool ollow-toolbar-btn";
+        button.dataset.action = action;
+        button.title = label;
+        button.setAttribute("aria-label", label);
+        button.innerHTML = icon ? renderIconLabel(icon, label) : `<span class="ollow-label">${label}</span>`;
+        this.mobileToolbarButtons[action] = button;
+        return button;
+      };
+
+      row.appendChild(createActionButton("undo", "Undo", "undo"));
+      row.appendChild(createActionButton("redo", "Redo", "redo"));
+
+      const styleButton = document.createElement("button");
+      styleButton.type = "button";
+      styleButton.className = "ollow-mobile-tool ollow-toolbar-btn ollow-mobile-tool--label";
+      styleButton.title = "Paragraph and styles";
+      styleButton.setAttribute("aria-label", "Paragraph and styles");
+      styleButton.innerHTML = `${renderIconLabel("styles", "Style")}<span class="ollow-mobile-caret" aria-hidden="true">▾</span>`;
+      styleButton.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        this.saveSelection();
+      });
+      styleButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        this.openActionDrawer("paragraph");
+      });
+      this.mobileToolbarButtons.style = styleButton;
+      row.appendChild(styleButton);
+
+      row.appendChild(createActionButton("bold", "Bold", "bold"));
+      row.appendChild(createActionButton("italic", "Italic", "italic"));
+      row.appendChild(createActionButton("link", "Link", "link"));
+      row.appendChild(createActionButton("image", "Image", "image"));
+
+      const moreButton = document.createElement("button");
+      moreButton.type = "button";
+      moreButton.className = "ollow-mobile-tool ollow-toolbar-btn ollow-mobile-tool--label";
+      moreButton.title = "More tools";
+      moreButton.setAttribute("aria-label", "More tools");
+      moreButton.setAttribute("aria-haspopup", "dialog");
+      moreButton.setAttribute("aria-expanded", "false");
+      moreButton.innerHTML = renderIconLabel("more", "More");
+      moreButton.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        this.saveSelection();
+      });
+      moreButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        this.toggleActionDrawer();
+      });
+      this.mobileToolbarButtons.more = moreButton;
+      row.appendChild(moreButton);
+
+      this.mobileToolbar = row;
+      return row;
+    }
+
+    buildActionDrawer() {
+      const shell = document.createElement("div");
+      shell.className = "ollow-action-drawer-shell";
+      shell.hidden = true;
+
+      const backdrop = document.createElement("button");
+      backdrop.type = "button";
+      backdrop.className = "ollow-action-drawer-backdrop";
+      backdrop.setAttribute("aria-label", "Close action drawer");
+      backdrop.addEventListener("click", (event) => {
+        event.preventDefault();
+        this.closeActionDrawer();
+      });
+
+      const panel = document.createElement("div");
+      panel.className = "ollow-action-drawer";
+      panel.setAttribute("role", "dialog");
+      panel.setAttribute("aria-modal", "true");
+      panel.setAttribute("aria-label", "Editor actions");
+      panel.innerHTML = `
+        <div class="ollow-action-drawer-header">
+          <div>
+            <strong>Editor tools</strong>
+            <span>Touch-friendly actions for mobile editing.</span>
+          </div>
+          <button type="button" class="ollow-action-drawer-close" aria-label="Close action drawer">
+            ${renderIcon("close")}
+          </button>
+        </div>
+      `;
+
+      panel.querySelector(".ollow-action-drawer-close")?.addEventListener("click", (event) => {
+        event.preventDefault();
+        this.closeActionDrawer();
+      });
+
+      const sections = [
+        {
+          key: "text",
+          label: "Text formatting",
+          items: [
+            ["menu-styles", "Styles", "styles"],
+            ["menu-font-family", "Font family", "font-family"],
+            ["menu-font-size", "Font size", "font-size"],
+            ["menu-text-color", "Text color", "text-color"],
+            ["menu-highlight-color", "Highlight color", "highlight"],
+            ["underline", "Underline", "underline"],
+            ["strikethrough", "Strikethrough", "strikethrough"],
+            ["subscript", "Subscript", "subscript"],
+            ["superscript", "Superscript", "superscript"],
+            ["remove-formatting", "Remove formatting", "remove-formatting"],
+            ["format-painter", "Format painter", "format-painter"],
+          ],
+        },
+        {
+          key: "paragraph",
+          label: "Paragraph",
+          items: [
+            ["h2", "H2", "styles"],
+            ["h3", "H3", "styles"],
+            ["h4", "H4", "styles"],
+            ["bulleted-list", "Bulleted list", "bulleted-list"],
+            ["numbered-list", "Numbered list", "numbered-list"],
+            ["quote", "Quote", "quote"],
+            ["align-left", "Align left", "align-left"],
+            ["align-center", "Align center", "align-center"],
+            ["align-right", "Align right", "align-right"],
+            ["align-justify", "Justify", "align-justify"],
+          ],
+        },
+        {
+          key: "insert",
+          label: "Insert",
+          items: [
+            ["image", "Image", "image"],
+            ["gallery", "Gallery", "gallery"],
+            ["embed", "Embed", "embed"],
+            ["table", "Table", "table"],
+            ["code", "Code", "code"],
+            ["bookmark", "Bookmark", "bookmark"],
+            ["special-characters", "Symbols", "special-characters"],
+            ["emoji", "Emoji", "emoji"],
+            ["related", "Related", "related"],
+            ["fact-box", "Fact Box", "fact-box"],
+            ["attachment", "Attachment", "attachment"],
+          ],
+        },
+        {
+          key: "export",
+          label: "Import / export",
+          items: [
+            ["import-markdown", "Import Markdown", "import"],
+            ["export-markdown", "Export Markdown", "markdown"],
+            ["export-html", "Export HTML", "export"],
+            ["export-pdf", "Export PDF", "pdf"],
+            ["import-docx", "Import DOCX", "import"],
+            ["export-docx", "Export DOCX", "docx"],
+          ],
+        },
+        {
+          key: "view",
+          label: "View / tools",
+          items: [
+            ["source-html", "Source / HTML", "source-html"],
+            ["find-replace", "Find / Replace", "find-replace"],
+            ["theme-light", "Light theme", "theme-light"],
+            ["theme-dark", "Dark theme", "theme-dark"],
+            ["theme-auto", "Auto theme", "theme-auto"],
+          ],
+        },
+      ];
+
+      sections.forEach((section) => {
+        const sectionElement = document.createElement("section");
+        sectionElement.className = "ollow-action-section";
+        sectionElement.dataset.drawerSection = section.key;
+        sectionElement.innerHTML = `<h4>${section.label}</h4>`;
+
+        const grid = document.createElement("div");
+        grid.className = "ollow-action-grid";
+        section.items.forEach(([action, label, icon]) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "ollow-action-button";
+          button.dataset.drawerCommand = action;
+          button.innerHTML = renderIconLabel(icon, label);
+          button.setAttribute("aria-label", label);
+          grid.appendChild(button);
+        });
+        sectionElement.appendChild(grid);
+        panel.appendChild(sectionElement);
+        this.actionDrawerSectionRefs[section.key] = sectionElement;
+      });
+
+      panel.addEventListener("mousedown", (event) => {
+        event.stopPropagation();
+      });
+      panel.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-drawer-command]");
+        if (!button) return;
+        event.preventDefault();
+        this.runDrawerAction(button.dataset.drawerCommand);
+      });
+
+      shell.appendChild(backdrop);
+      shell.appendChild(panel);
+      this.actionDrawerBackdrop = backdrop;
+      this.actionDrawerPanel = panel;
+      return shell;
+    }
+
+    openOverflowMenu() {
       if (!this.tabletOverflowMenu || !this.tabletOverflowButton) return;
       this.closeMenuDropdowns();
       this.closeStylesMenu();
@@ -2760,24 +3293,38 @@
       this.closeHighlightPopover();
       this.closeThemeMenu();
       this.tabletOverflowMenu.hidden = false;
+      this.tabletOverflowMenu.classList.add("is-open");
       this.tabletOverflowButton.setAttribute("aria-expanded", "true");
       this.tabletOverflowButton.classList.add("is-active");
     }
 
-    closeTabletOverflowMenu() {
+    closeOverflowMenu() {
       if (!this.tabletOverflowMenu || !this.tabletOverflowButton) return;
       this.tabletOverflowMenu.hidden = true;
+      this.tabletOverflowMenu.classList.remove("is-open");
       this.tabletOverflowButton.setAttribute("aria-expanded", "false");
       this.tabletOverflowButton.classList.remove("is-active");
     }
 
-    toggleTabletOverflowMenu() {
+    toggleOverflowMenu() {
       if (!this.tabletOverflowMenu) return;
       if (this.tabletOverflowMenu.hidden) {
-        this.openTabletOverflowMenu();
+        this.openOverflowMenu();
       } else {
-        this.closeTabletOverflowMenu();
+        this.closeOverflowMenu();
       }
+    }
+
+    openTabletOverflowMenu() {
+      this.openOverflowMenu();
+    }
+
+    closeTabletOverflowMenu() {
+      this.closeOverflowMenu();
+    }
+
+    toggleTabletOverflowMenu() {
+      this.toggleOverflowMenu();
     }
 
     updateTabletOverflowState(options) {
@@ -2790,9 +3337,111 @@
             ? Boolean(config.pullQuote)
             : action === "bookmark"
               ? Boolean(config.bookmark)
-              : false;
+              : action === "format-painter"
+                ? Boolean(config.formatPainter)
+                : action === "subscript"
+                  ? Boolean(config.subscript)
+                  : action === "superscript"
+                    ? Boolean(config.superscript)
+                    : false;
         button.classList.toggle("is-active", isActive);
+        const disabled = Boolean(config.sourceMode) && action !== "source-html";
+        button.disabled = disabled;
       });
+    }
+
+    isMobileToolbarMode() {
+      return typeof window !== "undefined" && window.innerWidth <= 480;
+    }
+
+    enterMobileToolbarMode() {
+      if (!this.wrapper) return;
+      this.wrapper.classList.add("is-mobile-toolbar-mode");
+      if (this.mobileToolbar) {
+        this.mobileToolbar.hidden = false;
+      }
+    }
+
+    exitMobileToolbarMode() {
+      if (!this.wrapper) return;
+      this.wrapper.classList.remove("is-mobile-toolbar-mode");
+      if (this.mobileToolbar) {
+        this.mobileToolbar.hidden = true;
+      }
+      this.closeActionDrawer({ restoreFocus: false });
+    }
+
+    updateResponsiveToolbarMode() {
+      this.rebuildResponsiveOverflowMenu();
+      if (this.isMobileToolbarMode()) {
+        this.enterMobileToolbarMode();
+      } else {
+        this.exitMobileToolbarMode();
+      }
+    }
+
+    openActionDrawer(sectionKey) {
+      if (!this.actionDrawer || !this.actionDrawerPanel || !this.isMobileToolbarMode()) return;
+      if (this.modal && !this.modal.hidden) return;
+      this.closeMenuDropdowns();
+      this.closeTabletOverflowMenu();
+      this.closeStylesMenu();
+      this.closeFontFamilyMenu();
+      this.closeFontSizeMenu();
+      this.closeTextColorPopover();
+      this.closeHighlightPopover();
+      this.closeThemeMenu();
+      this.actionDrawerLastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : this.mobileToolbarButtons.more || null;
+      this.actionDrawer.hidden = false;
+      this.wrapper?.classList.add("is-action-drawer-open");
+      if (this.mobileToolbarButtons.more) {
+        this.mobileToolbarButtons.more.setAttribute("aria-expanded", "true");
+        this.mobileToolbarButtons.more.classList.add("is-active");
+      }
+      const focusTarget = sectionKey && this.actionDrawerSectionRefs[sectionKey]
+        ? this.actionDrawerSectionRefs[sectionKey].querySelector("[data-drawer-command]")
+        : this.actionDrawerPanel.querySelector("[data-drawer-command]");
+      window.setTimeout(() => {
+        if (sectionKey && this.actionDrawerSectionRefs[sectionKey]) {
+          this.actionDrawerSectionRefs[sectionKey].scrollIntoView({ block: "start", behavior: "smooth" });
+        }
+        if (focusTarget && typeof focusTarget.focus === "function") {
+          focusTarget.focus();
+        }
+      }, 0);
+    }
+
+    closeActionDrawer(options) {
+      if (!this.actionDrawer) return;
+      const config = Object.assign({ restoreFocus: true }, options || {});
+      this.actionDrawer.hidden = true;
+      this.wrapper?.classList.remove("is-action-drawer-open");
+      if (this.mobileToolbarButtons.more) {
+        this.mobileToolbarButtons.more.setAttribute("aria-expanded", "false");
+        this.mobileToolbarButtons.more.classList.remove("is-active");
+      }
+      if (config.restoreFocus && this.actionDrawerLastFocus && typeof this.actionDrawerLastFocus.focus === "function") {
+        window.setTimeout(() => this.actionDrawerLastFocus && this.actionDrawerLastFocus.focus(), 0);
+      }
+    }
+
+    toggleActionDrawer(sectionKey) {
+      if (!this.actionDrawer) return;
+      if (this.actionDrawer.hidden) {
+        this.openActionDrawer(sectionKey);
+      } else {
+        this.closeActionDrawer();
+      }
+    }
+
+    runDrawerAction(command) {
+      if (!command) return;
+      this.closeActionDrawer({ restoreFocus: false });
+      if (command.startsWith("menu-") || command.startsWith("theme-")) {
+        this.executeMenuAction(command);
+        return;
+      }
+      this.handleAction(command);
     }
 
     openClearContentModal() {
@@ -2912,8 +3561,8 @@
       const groupUndo = document.createElement("div");
       groupUndo.className = "nw-toolbar-group nw-toolbar-group--history";
       this.toolbarGroups.undo = groupUndo;
-      groupUndo.appendChild(this.makeToolbarButton("undo", "Undo", '<span class="material-symbols-outlined">undo</span>'));
-      groupUndo.appendChild(this.makeToolbarButton("redo", "Redo", '<span class="material-symbols-outlined">redo</span>'));
+      groupUndo.appendChild(this.makeToolbarButton("undo", "Undo", renderIcon("undo")));
+      groupUndo.appendChild(this.makeToolbarButton("redo", "Redo", renderIcon("redo")));
 
       const typographyControls = this.buildTypographyControls();
       this.toolbarGroups.typography = typographyControls;
@@ -2934,32 +3583,32 @@
       const groupText = document.createElement("div");
       groupText.className = "nw-toolbar-group nw-toolbar-group--headings";
       this.toolbarGroups.text = groupText;
-      groupText.appendChild(this.makeToolbarButton("h2", "Heading 2", "H2", "nw-toolbar-button nw-text-button"));
-      groupText.appendChild(this.makeToolbarButton("h3", "Heading 3", "H3", "nw-toolbar-button nw-text-button"));
-      groupText.appendChild(this.makeToolbarButton("h4", "Heading 4", "H4", "nw-toolbar-button nw-text-button"));
+      groupText.appendChild(this.makeToolbarButton("h2", "Heading 2", renderIconLabel("styles", "H2", "ollow-label"), "nw-toolbar-button ollow-toolbar-btn"));
+      groupText.appendChild(this.makeToolbarButton("h3", "Heading 3", renderIconLabel("styles", "H3", "ollow-label"), "nw-toolbar-button ollow-toolbar-btn"));
+      groupText.appendChild(this.makeToolbarButton("h4", "Heading 4", renderIconLabel("styles", "H4", "ollow-label"), "nw-toolbar-button ollow-toolbar-btn"));
 
       const groupInline = document.createElement("div");
       groupInline.className = "nw-toolbar-group nw-toolbar-group--inline";
       this.toolbarGroups.inline = groupInline;
-      groupInline.appendChild(this.makeToolbarButton("bold", "Bold", "B", "nw-toolbar-button nw-text-button"));
-      groupInline.appendChild(this.makeToolbarButton("italic", "Italic", "I", "nw-toolbar-button nw-text-button"));
-      groupInline.appendChild(this.makeToolbarButton("underline", "Underline", "U", "nw-toolbar-button nw-text-button"));
-      groupInline.appendChild(this.makeToolbarButton("strikethrough", "Strikethrough", "S", "nw-toolbar-button nw-text-button nw-text-button--strikethrough"));
-      groupInline.appendChild(this.makeToolbarButton("subscript", "Subscript", "x₂", "nw-toolbar-button nw-text-button"));
-      groupInline.appendChild(this.makeToolbarButton("superscript", "Superscript", "x²", "nw-toolbar-button nw-text-button"));
-      groupInline.appendChild(this.makeToolbarButton("remove-formatting", "Remove formatting", "Tx", "nw-toolbar-button nw-text-button"));
+      groupInline.appendChild(this.makeToolbarButton("bold", "Bold", renderIcon("bold")));
+      groupInline.appendChild(this.makeToolbarButton("italic", "Italic", renderIcon("italic")));
+      groupInline.appendChild(this.makeToolbarButton("underline", "Underline", renderIcon("underline")));
+      groupInline.appendChild(this.makeToolbarButton("strikethrough", "Strikethrough", renderIcon("strikethrough")));
+      groupInline.appendChild(this.makeToolbarButton("subscript", "Subscript", renderIcon("subscript")));
+      groupInline.appendChild(this.makeToolbarButton("superscript", "Superscript", renderIcon("superscript")));
+      groupInline.appendChild(this.makeToolbarButton("remove-formatting", "Remove formatting", renderIcon("remove-formatting")));
       groupInline.appendChild(this.buildFormatPainterButton());
-      groupInline.appendChild(this.makeToolbarButton("link", "Link", '<span class="material-symbols-outlined">link</span>'));
-      groupInline.appendChild(this.makeToolbarButton("unlink", "Unlink", '<span class="material-symbols-outlined">link_off</span>'));
-      groupInline.appendChild(this.makeToolbarButton("bookmark", "Insert bookmark / anchor", '<span class="material-symbols-outlined">bookmark</span>'));
+      groupInline.appendChild(this.makeToolbarButton("link", "Link", renderIcon("link")));
+      groupInline.appendChild(this.makeToolbarButton("unlink", "Unlink", renderIcon("unlink")));
+      groupInline.appendChild(this.makeToolbarButton("bookmark", "Insert bookmark / anchor", renderIcon("bookmark")));
 
       const groupBlocks = document.createElement("div");
       groupBlocks.className = "nw-toolbar-group nw-toolbar-group--paragraph";
       this.toolbarGroups.blocks = groupBlocks;
-      groupBlocks.appendChild(this.makeToolbarButton("bulleted-list", "Bullet list", '<span class="material-symbols-outlined">format_list_bulleted</span>'));
-      groupBlocks.appendChild(this.makeToolbarButton("numbered-list", "Numbered list", '<span class="material-symbols-outlined">format_list_numbered</span>'));
-      groupBlocks.appendChild(this.makeToolbarButton("quote", "Quote", '<span class="material-symbols-outlined">format_quote</span>'));
-      groupBlocks.appendChild(this.makeToolbarButton("horizontal-rule", "Horizontal rule", '<span class="material-symbols-outlined">horizontal_rule</span>'));
+      groupBlocks.appendChild(this.makeToolbarButton("bulleted-list", "Bullet list", renderIcon("bulleted-list")));
+      groupBlocks.appendChild(this.makeToolbarButton("numbered-list", "Numbered list", renderIcon("numbered-list")));
+      groupBlocks.appendChild(this.makeToolbarButton("quote", "Quote", renderIcon("quote")));
+      groupBlocks.appendChild(this.makeToolbarButton("horizontal-rule", "Horizontal rule", renderIcon("horizontal-rule")));
 
       const groupMediaAlign = document.createElement("div");
       groupMediaAlign.className = "nw-toolbar-group nw-toolbar-group--alignment nw-toolbar-group--media-align";
@@ -3004,7 +3653,7 @@
       fontButton.setAttribute("data-font-menu-toggle", "true");
       fontButton.setAttribute("aria-haspopup", "menu");
       fontButton.setAttribute("aria-expanded", "false");
-      fontButton.innerHTML = `<span class="ollow-current-font">${FONT_FAMILY_LOOKUP.get(DEFAULT_FONT_FAMILY_KEY).label}</span><span class="ollow-font-arrow" aria-hidden="true">▾</span>`;
+      fontButton.innerHTML = `${renderIcon("font-family")}<span class="ollow-current-font">${FONT_FAMILY_LOOKUP.get(DEFAULT_FONT_FAMILY_KEY).label}</span><span class="ollow-font-arrow" aria-hidden="true">▾</span>`;
       fontButton.addEventListener("mousedown", (event) => {
         event.preventDefault();
         this.saveSelection();
@@ -3040,7 +3689,7 @@
       sizeDown.type = "button";
       sizeDown.className = "ollow-size-step";
       sizeDown.setAttribute("aria-label", "Decrease font size");
-      sizeDown.textContent = "−";
+      sizeDown.innerHTML = renderIcon("minus");
       sizeDown.addEventListener("mousedown", (event) => {
         event.preventDefault();
         this.saveSelection();
@@ -3085,7 +3734,7 @@
       sizeUp.type = "button";
       sizeUp.className = "ollow-size-step";
       sizeUp.setAttribute("aria-label", "Increase font size");
-      sizeUp.textContent = "+";
+      sizeUp.innerHTML = renderIcon("plus");
       sizeUp.addEventListener("mousedown", (event) => {
         event.preventDefault();
         this.saveSelection();
@@ -3130,7 +3779,7 @@
       colorButton.setAttribute("aria-haspopup", "menu");
       colorButton.setAttribute("aria-expanded", "false");
       colorButton.innerHTML = `
-        <span class="ollow-text-color-label" aria-hidden="true">A</span>
+        ${renderIcon("text-color", "ollow-text-color-label")}
         <span class="ollow-text-color-bar"></span>
         <span class="ollow-text-color-arrow" aria-hidden="true">▾</span>
       `;
@@ -3189,7 +3838,7 @@
       highlightButton.setAttribute("aria-haspopup", "menu");
       highlightButton.setAttribute("aria-expanded", "false");
       highlightButton.innerHTML = `
-        <span class="ollow-highlight-label" aria-hidden="true">ab</span>
+        ${renderIcon("highlight", "ollow-highlight-label")}
         <span class="ollow-highlight-bar"></span>
         <span class="ollow-highlight-arrow" aria-hidden="true">▾</span>
       `;
@@ -3268,7 +3917,7 @@
       button.setAttribute("aria-haspopup", "menu");
       button.setAttribute("aria-expanded", "false");
       button.setAttribute("aria-label", "Styles");
-      button.innerHTML = `<span class="ollow-styles-current">Styles</span><span class="ollow-styles-arrow" aria-hidden="true">▾</span>`;
+      button.innerHTML = `${renderIcon("styles")}<span class="ollow-styles-current">Styles</span><span class="ollow-styles-arrow" aria-hidden="true">▾</span>`;
       button.addEventListener("mousedown", (event) => {
         event.preventDefault();
         this.saveSelection();
@@ -3306,15 +3955,10 @@
     buildFormatPainterButton() {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "nw-toolbar-button ollow-format-painter-button";
+      button.className = "nw-toolbar-button ollow-toolbar-btn ollow-format-painter-button";
       button.title = "Format Painter";
       button.setAttribute("aria-label", "Format Painter");
-      button.innerHTML = `
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M4 7h10v3l4 4v3h-2v4h-3v-6l-3-3H4z" fill="currentColor"></path>
-          <path d="M6 3h8v3H6z" fill="currentColor"></path>
-        </svg>
-      `;
+      button.innerHTML = renderIcon("format-painter");
       button.addEventListener("mousedown", (event) => {
         event.preventDefault();
         this.saveSelection();
@@ -3331,6 +3975,7 @@
         window.clearTimeout(this.formatPainterClickTimer);
         this.armFormatPainter(true);
       });
+      this.applyResponsiveCommandVisibility(button, "format-painter");
       this.toolbarButtons["format-painter"] = button;
       this.formatPainterButton = button;
       return button;
@@ -3377,8 +4022,8 @@
       return `
         <div class="ollow-text-color-section">
           <button type="button" class="ollow-text-color-reset" data-text-color-reset="true">
-            <span class="ollow-text-color-reset-icon">A</span>
-            <span>Automatic</span>
+            ${renderIcon("text-color", "ollow-text-color-reset-icon")}
+            <span class="ollow-label">Automatic</span>
           </button>
         </div>
         ${recentColors.length ? `
@@ -3423,8 +4068,8 @@
       return `
         <div class="ollow-highlight-section">
           <button type="button" class="ollow-highlight-reset" data-highlight-reset="true">
-            <span class="ollow-highlight-reset-icon">ab</span>
-            <span>No highlight</span>
+            ${renderIcon("highlight", "ollow-highlight-reset-icon")}
+            <span class="ollow-label">No highlight</span>
           </button>
         </div>
         <div class="ollow-highlight-section">
@@ -3487,7 +4132,7 @@
       button.setAttribute("aria-haspopup", "menu");
       button.setAttribute("aria-expanded", "false");
       button.dataset.action = "theme-toggle";
-      button.innerHTML = getThemeIcon(this.theme);
+      button.innerHTML = renderIcon(this.theme === "dark" ? "theme-dark" : this.theme === "auto" ? "theme-auto" : "theme-light");
       button.addEventListener("mousedown", (event) => {
         event.preventDefault();
       });
@@ -3502,9 +4147,9 @@
       menu.setAttribute("role", "menu");
       menu.setAttribute("aria-label", "Editor theme");
       menu.innerHTML = `
-        <button type="button" role="menuitemradio" data-theme-choice="light">${getThemeIcon("light")}<span>Light</span></button>
-        <button type="button" role="menuitemradio" data-theme-choice="dark">${getThemeIcon("dark")}<span>Dark</span></button>
-        <button type="button" role="menuitemradio" data-theme-choice="auto">${getThemeIcon("auto")}<span>Auto</span></button>
+        <button type="button" role="menuitemradio" data-theme-choice="light">${renderIcon("theme-light")}<span class="ollow-label">Light</span></button>
+        <button type="button" role="menuitemradio" data-theme-choice="dark">${renderIcon("theme-dark")}<span class="ollow-label">Dark</span></button>
+        <button type="button" role="menuitemradio" data-theme-choice="auto">${renderIcon("theme-auto")}<span class="ollow-label">Auto</span></button>
       `;
       menu.addEventListener("mousedown", (event) => {
         event.preventDefault();
@@ -3552,36 +4197,36 @@
         {
           className: "nw-toolbar-group nw-insert-group nw-insert-group--blocks",
           items: [
-            ["pull-quote", "Pull Quote", "format_quote"],
+            ["pull-quote", "Pull Quote", "pullquote"],
             ["image", "Image", "image"],
-            ["gallery", "Gallery", "photo_library"],
-            ["embed", "Embed", "smart_display"],
+            ["gallery", "Gallery", "gallery"],
+            ["embed", "Embed", "embed"],
             ["table", "Table", "table"],
-            ["code", "Code", "code_blocks"],
-            ["related", "Related", "article"],
-            ["fact-box", "Fact Box", "fact_check"],
-            ["attachment", "Attachment", "attach_file"],
+            ["code", "Code", "code"],
+            ["related", "Related", "related"],
+            ["fact-box", "Fact Box", "fact-box"],
+            ["attachment", "Attachment", "attachment"],
           ],
         },
         {
           className: "nw-toolbar-group nw-insert-group nw-insert-group--utilities",
           items: [
             ["bookmark", "Bookmark", "bookmark"],
-            ["source-html", "HTML", ""],
-            ["find-replace", "Find / Replace", "search"],
-            ["special-characters", "Ω Symbols", ""],
-            ["emoji", "Emoji", ""],
+            ["source-html", "HTML", "source-html"],
+            ["find-replace", "Find / Replace", "find-replace"],
+            ["special-characters", "Ω Symbols", "special-characters"],
+            ["emoji", "Emoji", "emoji"],
           ],
         },
         {
           className: "nw-toolbar-group nw-insert-group nw-insert-group--import-export",
           items: [
-            ["import-docx", "Import DOCX", "upload_file"],
-            ["import-markdown", "Import MD", "upload_file"],
-            ["export-markdown", "Export MD", "download"],
-            ["export-html", "Export HTML", "download"],
-            ["export-pdf", "Export PDF", "print"],
-            ["export-docx", "Export DOCX", "download"],
+            ["import-docx", "Import DOCX", "import"],
+            ["import-markdown", "Import MD", "markdown"],
+            ["export-markdown", "Export MD", "markdown"],
+            ["export-html", "Export HTML", "export"],
+            ["export-pdf", "Export PDF", "pdf"],
+            ["export-docx", "Export DOCX", "docx"],
           ],
         },
       ];
@@ -3592,23 +4237,18 @@
         groupConfig.items.forEach(([action, label, icon]) => {
           const button = document.createElement("button");
           button.type = "button";
-          button.className = `nw-insert-pill${action === "bookmark" ? " ollow-bookmark-btn" : ""}`;
+          button.className = `nw-insert-pill ollow-toolbar-pill${action === "bookmark" ? " ollow-bookmark-btn" : ""}`;
           button.dataset.action = action;
-          if (tabletOverflowActions.has(action)) {
-            button.dataset.tabletHidden = "true";
-          }
           button.setAttribute("aria-pressed", "false");
           const shortcutLabel = TOOLBAR_SHORTCUT_LABELS[action];
           const fullTitle = shortcutLabel ? `${label} (${shortcutLabel.replace(/mod/gi, "Ctrl/Cmd")})` : label;
           button.title = fullTitle;
           button.setAttribute("aria-label", fullTitle);
-          button.innerHTML = action === "special-characters"
-            ? `<span class="ollow-special-char-pill-icon" aria-hidden="true">Ω</span>${label}`
-            : action === "emoji"
-              ? `<span class="ollow-special-char-pill-icon" aria-hidden="true">☺</span>${label}`
-            : action === "source-html"
-              ? `<span class="ollow-special-char-pill-icon" aria-hidden="true">&lt;&gt;</span>${label}`
-            : `<span class="material-symbols-outlined">${icon}</span>${label}`;
+          button.innerHTML = renderIconLabel(icon, label);
+          this.applyResponsiveCommandVisibility(button, action);
+          if (tabletOverflowActions.has(action) && !button.dataset.overflowTablet) {
+            button.dataset.overflowTablet = "true";
+          }
           this.toolbarButtons[action] = button;
           group.appendChild(button);
         });
@@ -3964,13 +4604,14 @@
     makeToolbarButton(action, title, content, className) {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = className || "nw-toolbar-button";
+      button.className = className || "nw-toolbar-button ollow-toolbar-btn";
       button.dataset.action = action;
       const shortcutLabel = TOOLBAR_SHORTCUT_LABELS[action];
       const fullTitle = shortcutLabel ? `${title} (${shortcutLabel.replace(/mod/gi, "Ctrl/Cmd")})` : title;
       button.title = fullTitle;
       button.setAttribute("aria-label", fullTitle);
       button.innerHTML = content;
+      this.applyResponsiveCommandVisibility(button, action);
       this.toolbarButtons[action] = button;
       return button;
     }
@@ -4098,7 +4739,7 @@
 
     updateThemeControlState() {
       if (this.themeToggleButton) {
-        this.themeToggleButton.innerHTML = getThemeIcon(this.theme);
+        this.themeToggleButton.innerHTML = renderIcon(this.theme === "dark" ? "theme-dark" : this.theme === "auto" ? "theme-auto" : "theme-light");
         this.themeToggleButton.title = `Theme: ${this.theme[0].toUpperCase()}${this.theme.slice(1)}`;
         this.themeToggleButton.setAttribute("aria-label", `Theme: ${this.theme}`);
       }
@@ -5100,15 +5741,15 @@
     createPluginButton(config) {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = config.className || "nw-toolbar-button";
+      button.className = config.className || "nw-toolbar-button ollow-toolbar-btn";
       button.title = config.title || config.label || config.name || "";
       button.setAttribute("aria-label", config.title || config.label || config.name || "");
       if (config.icon && /<[^>]+>/.test(config.icon)) {
         button.innerHTML = config.icon;
       } else if (config.icon) {
-        button.textContent = config.icon;
+        button.innerHTML = renderIcon(config.icon);
       } else {
-        button.textContent = config.label || config.name || "";
+        button.innerHTML = `<span class="ollow-label">${config.label || config.name || ""}</span>`;
       }
       button.addEventListener("click", (event) => {
         event.preventDefault();
@@ -5603,6 +6244,7 @@
       if (!this.wrapper || !this.wrapper.contains(event.target)) {
         this.closeMenuDropdowns();
         this.closeTabletOverflowMenu();
+        this.closeActionDrawer({ restoreFocus: false });
         this.closeStylesMenu();
         this.closeFontFamilyMenu();
         this.closeFontSizeMenu();
@@ -5618,6 +6260,8 @@
       if (
         (this.menuBar && this.menuBar.contains(event.target)) ||
         (this.tabletOverflowControl && this.tabletOverflowControl.contains(event.target)) ||
+        (this.mobileToolbar && this.mobileToolbar.contains(event.target)) ||
+        (this.actionDrawer && this.actionDrawer.contains(event.target)) ||
         (this.fontFamilyMenu && this.fontFamilyMenu.contains(event.target)) ||
         (this.fontFamilyButton && this.fontFamilyButton.contains(event.target)) ||
         (this.stylesMenu && this.stylesMenu.contains(event.target)) ||
@@ -5635,6 +6279,7 @@
 
       this.closeMenuDropdowns();
       this.closeTabletOverflowMenu();
+      this.closeActionDrawer({ restoreFocus: false });
       this.closeStylesMenu();
       this.closeFontFamilyMenu();
       this.closeFontSizeMenu();
@@ -5700,6 +6345,10 @@
         this.closeTabletOverflowMenu();
         return;
       }
+      if (this.actionDrawer && !this.actionDrawer.hidden) {
+        this.closeActionDrawer();
+        return;
+      }
       if (this.stylesMenu && !this.stylesMenu.hidden) {
         this.closeStylesMenu();
         return;
@@ -5748,8 +6397,10 @@
     }
 
     handleViewportChange() {
+      this.updateResponsiveToolbarMode();
       this.closeMenuDropdowns();
       this.closeTabletOverflowMenu();
+      this.closeActionDrawer({ restoreFocus: false });
       this.closeThemeMenu();
       this.closeStylesMenu();
       this.closeFontFamilyMenu();
@@ -9088,6 +9739,7 @@
 
     openModal(config) {
       this.saveSelection();
+      this.closeActionDrawer({ restoreFocus: false });
       if (this.wrapper) {
         this.wrapper.classList.add("ollow-modal-open");
       }
@@ -9307,7 +9959,19 @@
           this.toolbarButtons["source-html"].classList.add("is-active");
         }
         this.updateMenuBarState();
-        this.updateTabletOverflowState({ sourceMode: true });
+        this.updateTabletOverflowState({
+          sourceMode: true,
+          formatPainter: Boolean(this.formatPainterState && this.formatPainterState.active),
+          subscript: false,
+          superscript: false,
+        });
+        this.updateMobileToolbarState({
+          sourceMode: true,
+          bold: false,
+          italic: false,
+          link: false,
+          styleActive: false,
+        });
         return;
       }
       if (this.wrapper) {
@@ -9411,6 +10075,65 @@
         sourceMode: false,
         pullQuote: isInsidePullQuote,
         bookmark: isInsideBookmark,
+        formatPainter: Boolean(this.formatPainterState && this.formatPainterState.active),
+        subscript: Boolean(states.subscript),
+        superscript: Boolean(states.superscript),
+      });
+      this.updateMobileToolbarState({
+        sourceMode: false,
+        bold: Boolean(states.bold),
+        italic: Boolean(states.italic),
+        link: Boolean(states.link),
+        styleActive: Boolean(states.quote || states.h2 || states.h3 || states.h4 || (this.getCurrentStylePreset() && this.getCurrentStylePreset().key !== "normal")),
+      });
+    }
+
+    updateMobileToolbarState(options) {
+      const config = options || {};
+      const buttonStates = [
+        ["bold", config.bold],
+        ["italic", config.italic],
+        ["link", config.link],
+        ["style", config.styleActive],
+      ];
+      buttonStates.forEach(([key, isActive]) => {
+        const button = this.mobileToolbarButtons[key];
+        if (!button) return;
+        button.classList.toggle("is-active", Boolean(isActive));
+      });
+      const moreButton = this.mobileToolbarButtons.more;
+      if (moreButton && (this.actionDrawer && !this.actionDrawer.hidden)) {
+        moreButton.classList.add("is-active");
+      }
+      const shouldDisable = Boolean(config.sourceMode);
+      ["bold", "italic", "link", "image", "style"].forEach((key) => {
+        const button = this.mobileToolbarButtons[key];
+        if (!button) return;
+        button.disabled = shouldDisable;
+      });
+      this.updateActionDrawerState(config);
+    }
+
+    updateActionDrawerState(options) {
+      if (!this.actionDrawerPanel) return;
+      const config = options || {};
+      const allowedInSource = new Set(["source-html", "theme-light", "theme-dark", "theme-auto"]);
+      Array.from(this.actionDrawerPanel.querySelectorAll("[data-drawer-command]")).forEach((button) => {
+        const command = button.dataset.drawerCommand || "";
+        const disabled = Boolean(config.sourceMode) && !allowedInSource.has(command);
+        button.disabled = disabled;
+        const isActive = command === "source-html"
+          ? Boolean(config.sourceMode)
+          : command === "format-painter"
+            ? Boolean(this.formatPainterState && this.formatPainterState.active)
+            : command === "bookmark"
+              ? Boolean(this.selectedBookmark)
+              : command === "subscript"
+                ? Boolean(safeQueryState("subscript"))
+                : command === "superscript"
+                  ? Boolean(safeQueryState("superscript"))
+                  : false;
+        button.classList.toggle("is-active", isActive);
       });
     }
 
