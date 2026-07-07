@@ -275,6 +275,8 @@ Less-used commands are managed through a responsive overflow system instead of k
 
 The `More` button opens the overflow menu on desktop and tablet. The menu is rendered on demand, grouped into clear sections, supports quick search/filtering, and uses the same command handlers as the visible toolbar buttons. The responsive command metadata controls which actions stay visible and which actions move into overflow at each breakpoint.
 
+Desktop menu dropdowns keep command labels and keyboard shortcuts in separate aligned columns, with a stacked fallback on very narrow screens.
+
 ---
 
 ## Icon System

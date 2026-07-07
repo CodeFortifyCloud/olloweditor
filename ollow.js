@@ -2473,6 +2473,7 @@
 
         const dropdown = document.createElement("div");
         dropdown.className = "ollow-menu-dropdown";
+        dropdown.dataset.menu = menu.key;
         dropdown.hidden = true;
         dropdown.setAttribute("role", "menu");
         dropdown.setAttribute("aria-label", menu.label);
