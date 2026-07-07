@@ -1,17 +1,13 @@
-import type { ForwardRefExoticComponent, RefAttributes, TextareaHTMLAttributes } from "react";
-import type { OllowEditorInstance, OllowEditorOptions } from "./index";
+import type { ComponentType } from "react";
 
-export interface ReactOllowEditorProps {
+export interface OllowEditorReactProps {
   value?: string;
-  defaultValue?: string;
-  options?: OllowEditorOptions;
-  onChange?: (value: string, editor: OllowEditorInstance) => void;
-  onReady?: (editor: OllowEditorInstance) => void;
-  textareaProps?: TextareaHTMLAttributes<HTMLTextAreaElement>;
+  onChange?: (html: string) => void;
+  placeholder?: string;
+  uploadImage?: (file: File) => Promise<string> | string;
+  readOnly?: boolean;
+  className?: string;
 }
 
-export declare const OllowEditor: ForwardRefExoticComponent<
-  ReactOllowEditorProps & RefAttributes<OllowEditorInstance | null>
->;
-
+export declare const OllowEditor: ComponentType<OllowEditorReactProps>;
 export default OllowEditor;

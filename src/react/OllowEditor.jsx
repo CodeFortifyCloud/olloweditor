@@ -1,58 +1,49 @@
-import { forwardRef, useEffect, useRef } from "react";
-import { OllowEditor as OllowEditorCore } from "../core/ollow-editor.js";
+import { useEffect, useRef } from "react";
+import { createOllowEditor } from "../index.js";
 
-function mergeRefs(forwardedRef, value) {
-  if (!forwardedRef) {
-    return;
-  }
-  if (typeof forwardedRef === "function") {
-    forwardedRef(value);
-    return;
-  }
-  forwardedRef.current = value;
-}
-
-function OllowEditorComponent(
-  {
-    value,
-    defaultValue,
-    options,
-    onChange,
-    onReady,
-    textareaProps = {},
-  },
-  forwardedRef
-) {
-  const textareaRef = useRef(null);
+export function OllowEditor({
+  value = "",
+  onChange,
+  placeholder,
+  uploadImage,
+  readOnly = false,
+  className,
+}) {
+  const elementRef = useRef(null);
   const editorRef = useRef(null);
+  const lastHtmlRef = useRef(typeof value === "string" ? value : "");
+  const isSyncingRef = useRef(false);
+  const onChangeRef = useRef(onChange);
 
   useEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    if (!elementRef.current) {
       return undefined;
     }
 
-    if (typeof value === "string" && textarea.value !== value) {
-      textarea.value = value;
-    }
+    const editor = createOllowEditor(elementRef.current, {
+      initialHTML: typeof value === "string" ? value : "",
+      placeholder,
+      readOnly,
+      className,
+      uploadImage,
+      onChange(html) {
+        lastHtmlRef.current = html;
+        if (isSyncingRef.current) {
+          return;
+        }
+        if (typeof onChangeRef.current === "function") {
+          onChangeRef.current(html);
+        }
+      },
+    });
 
-    const editor = OllowEditorCore.init(textarea, options);
     editorRef.current = editor;
-    mergeRefs(forwardedRef, editor);
-
-    if (editor && typeof onChange === "function") {
-      editor.on("change", () => {
-        editor.sync();
-        onChange(textarea.value, editor);
-      });
-    }
-
-    if (editor && typeof onReady === "function") {
-      onReady(editor);
-    }
 
     return () => {
-      mergeRefs(forwardedRef, null);
       if (editorRef.current) {
         editorRef.current.destroy();
         editorRef.current = null;
@@ -61,35 +52,32 @@ function OllowEditorComponent(
   }, []);
 
   useEffect(() => {
-    const textarea = textareaRef.current;
     const editor = editorRef.current;
-    if (!textarea || !editor || typeof value !== "string" || textarea.value === value) {
+    const nextValue = typeof value === "string" ? value : "";
+    if (!editor || nextValue === lastHtmlRef.current) {
       return;
     }
-    textarea.value = value;
-    editor.setHTML(value);
-    editor.sync();
+
+    isSyncingRef.current = true;
+    editor.setHTML(nextValue);
+    lastHtmlRef.current = editor.getHTML();
+    isSyncingRef.current = false;
   }, [value]);
 
   useEffect(() => {
     const editor = editorRef.current;
-    if (!editor || !options) {
+    if (!editor) {
       return;
     }
-    editor.options = Object.assign({}, editor.options, options);
-  }, [options]);
+    editor.options = Object.assign({}, editor.options, {
+      placeholder,
+      readOnly,
+      className,
+      uploadImage,
+    });
+  }, [placeholder, readOnly, className, uploadImage]);
 
-  const resolvedDefaultValue = typeof value === "string" ? value : defaultValue;
-
-  return (
-    <textarea
-      {...textareaProps}
-      ref={textareaRef}
-      defaultValue={resolvedDefaultValue}
-      data-nw-editor={textareaProps["data-nw-editor"] ?? ""}
-    />
-  );
+  return <div ref={elementRef} className={className} />;
 }
 
-export const OllowEditor = forwardRef(OllowEditorComponent);
 export default OllowEditor;
