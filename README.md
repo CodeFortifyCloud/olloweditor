@@ -47,22 +47,25 @@ olloweditor/
 ## Install
 
 ```bash
-npm install olloweditor
+npm install @codefortify/olloweditor
 ```
 
 ## Vanilla JavaScript usage
 
 ```html
-<link rel="stylesheet" href="olloweditor/styles.css" />
+<link rel="stylesheet" href="@codefortify/olloweditor/style.css" />
 
 <textarea id="editor" name="content" data-nw-editor></textarea>
 
 <script type="module">
-  import OllowEditor from "olloweditor";
+  import { createOllowEditor } from "@codefortify/olloweditor";
 
-  OllowEditor.init("#editor", {
-    theme: "auto",
-    persistTheme: true
+  createOllowEditor("#editor", {
+    initialHTML: "<p>Hello OllowEditor</p>",
+    placeholder: "Start writing...",
+    onChange: (html) => {
+      console.log(html);
+    }
   });
 </script>
 ```
@@ -70,30 +73,33 @@ npm install olloweditor
 ## Vanilla TypeScript usage
 
 ```ts
-import OllowEditor from "olloweditor";
-import "olloweditor/styles.css";
+import {
+  createOllowEditor,
+  type OllowEditorOptions
+} from "@codefortify/olloweditor";
+import "@codefortify/olloweditor/style.css";
 
-const editor = OllowEditor.init("#editor", {
-  theme: "auto",
-  persistTheme: true
-});
+const options: OllowEditorOptions = {
+  initialHTML: "<p>Hello TypeScript</p>",
+  placeholder: "Write something...",
+  onChange: (html: string) => {
+    console.log(html);
+  }
+};
 
-editor?.on("change", () => {
-  editor.sync();
-});
+createOllowEditor("#editor", options);
 ```
 
 ## React JavaScript usage
 
 ```jsx
-import "olloweditor/styles.css";
-import { OllowEditor } from "olloweditor/react";
+import "@codefortify/olloweditor/style.css";
+import { OllowEditor } from "@codefortify/olloweditor/react";
 
 export default function ArticleForm() {
   return (
     <OllowEditor
-      options={{ theme: "auto", persistTheme: true }}
-      textareaProps={{ name: "body" }}
+      placeholder="Write your article..."
     />
   );
 }
@@ -102,14 +108,13 @@ export default function ArticleForm() {
 ## React TypeScript usage
 
 ```tsx
-import "olloweditor/styles.css";
-import { OllowEditor } from "olloweditor/react";
+import "@codefortify/olloweditor/style.css";
+import { OllowEditor } from "@codefortify/olloweditor/react";
 
 export default function EditorForm() {
   return (
     <OllowEditor
-      options={{ theme: "auto", persistTheme: true }}
-      textareaProps={{ name: "body" }}
+      placeholder="Write your article..."
     />
   );
 }
@@ -124,4 +129,4 @@ Open [examples/vanilla-js/index.html](/home/jaki/Dev/olloweditor/examples/vanill
 - `examples/` and `website/` are excluded from npm publishing.
 - Package exports are defined in `src/index.js`.
 - TypeScript declarations are published from `src/types/`.
-- Shared CSS is published as `olloweditor/styles.css`.
+- Shared CSS is published as `@codefortify/olloweditor/style.css`.

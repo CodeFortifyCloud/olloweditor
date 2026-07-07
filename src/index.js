@@ -13,3 +13,4 @@ export function createOllowEditor(selector, options = {}) {
 }
 
 export { OllowEditorCore };
+export default createOllowEditor;

@@ -12100,12 +12100,10 @@ ${this.getExportPDFStyles(options)}
   };
 
   if (typeof window !== "undefined") {
-    window.NationWireEditor = api;
     window.OllowEditor = api;
   } else if (globalScope) {
-    globalScope.NationWireEditor = api;
     globalScope.OllowEditor = api;
   }
 
-export { createOllowEditor, OllowEditorCore, api as NationWireEditor, api as OllowEditor };
+export { createOllowEditor, OllowEditorCore, api as OllowEditor };
 export default api;

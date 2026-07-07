@@ -1,3 +1,5 @@
+import { createOllowEditor } from "../src/index.js";
+
 document.addEventListener("DOMContentLoaded", () => {
   const menuToggle = document.querySelector(".menu-toggle");
   const siteNav = document.getElementById("site-nav");
@@ -50,21 +52,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const demoTextarea = document.getElementById("ollow-editor-demo-input");
-  const editorApi = window.NationWireEditor;
-
-  if (demoTextarea && editorApi && typeof editorApi.initAll === "function") {
-    editorApi.initAll(document, {
-      persistTheme: false,
-      theme: "light",
-      docx: {
-        enabled: true
+  if (demoTextarea) {
+    const editor = createOllowEditor(demoTextarea, {
+      initialHTML: demoTextarea.value,
+      placeholder: "Start writing with OllowEditor...",
+      onChange: (html) => {
+        demoTextarea.value = html;
       }
     });
-
-    const instance = editorApi.get("#ollow-editor-demo-input");
-    if (instance && typeof instance.sync === "function") {
-      instance.sync({ autosave: false, silent: true });
-    }
+    void editor;
   }
 
   const docsSidebar = document.getElementById("docs-sidebar");

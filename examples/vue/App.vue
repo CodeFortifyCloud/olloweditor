@@ -1,12 +1,11 @@
 <script setup>
-import "olloweditor/styles.css";
-import OllowEditor from "olloweditor";
+import createOllowEditor from "@codefortify/olloweditor";
+import "@codefortify/olloweditor/style.css";
 import { onMounted } from "vue";
 
 onMounted(() => {
-  OllowEditor.init("#editor", {
-    theme: "auto",
-    persistTheme: true,
+  createOllowEditor("#editor", {
+    placeholder: "Start writing...",
   });
 });
 </script>

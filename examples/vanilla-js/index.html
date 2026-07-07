@@ -128,43 +128,20 @@
 
 <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="module">
-  import OllowEditor, { NationWireEditor } from "../../src/index.js";
+  import { createOllowEditor } from "../../src/index.js";
 
-  OllowEditor.registerPlugin("alertBox", function(editor, options) {
-    const label = options.label || "Alert";
-    editor.addSanitizerRule({
-      classes: ["ollow-alert-box"]
-    });
-    editor.addToolbarButton({
-      name: "alertBox",
-      label: label,
-      icon: "alert-box",
-      group: "blocks",
-      title: "Insert alert box",
-      onClick() {
-        editor.insertHTML('<section class="ollow-alert-box"><p>Alert text</p></section>');
-      }
-    });
-  });
-
-  NationWireEditor.initAll(document, {
-    persistTheme: true,
-    docx: {
-      enabled: true
-    },
-    plugins: {
-      alertBox: {
-        label: "Alert"
-      }
+  const editor = createOllowEditor("#story_body", {
+    initialHTML: "<p>Hello OllowEditor</p>",
+    placeholder: "Start writing...",
+    onChange: (html) => {
+      console.log(html);
     }
   });
 
   const output = document.getElementById("submitted-html");
   document.getElementById("demo-form").addEventListener("submit", (event) => {
     event.preventDefault();
-    const bodyEditor = NationWireEditor.get("#story_body");
-    bodyEditor.sync();
-    output.textContent = document.getElementById("story_body").value;
+    output.textContent = editor.getHTML();
   });
 </script>
 </body>
