@@ -1,11 +1,27 @@
-import OllowEditor from "olloweditor";
-import "olloweditor/styles.css";
+import {
+  createOllowEditor,
+  type OllowEditorOptions,
+} from "@codefortify/olloweditor";
+import "@codefortify/olloweditor/style.css";
 
-const editor = OllowEditor.init("#editor", {
-  theme: "auto",
-  persistTheme: true,
-});
+const options: OllowEditorOptions = {
+  initialHTML: "<p>Hello TypeScript</p>",
+  placeholder: "Write something...",
+  uploadImage: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("image", file);
 
-editor?.on("change", () => {
-  editor.sync();
-});
+    const response = await fetch("/api/uploads/image", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data: { url: string } = await response.json();
+    return data.url;
+  },
+  onChange: (html: string) => {
+    console.log(html);
+  },
+};
+
+createOllowEditor("#editor", options);

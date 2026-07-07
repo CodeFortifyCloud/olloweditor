@@ -1,4 +1,5 @@
 export type OllowEditorSelector = string | HTMLElement;
+export type OllowEditorUploadImage = (file: File) => Promise<string> | string;
 
 export interface OllowEditorOptions {
   initialHTML?: string;
@@ -6,7 +7,7 @@ export interface OllowEditorOptions {
   readOnly?: boolean;
   className?: string;
   onChange?: (html: string) => void;
-  uploadImage?: (file: File) => Promise<string> | string;
+  uploadImage?: OllowEditorUploadImage;
 }
 
 export declare class OllowEditorCore {

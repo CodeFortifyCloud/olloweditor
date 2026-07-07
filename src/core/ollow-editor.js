@@ -9012,6 +9012,8 @@ const globalScope = typeof window !== "undefined" ? window : globalThis;
             throw new Error("uploadImage(file) must return a valid image URL.");
           }
           return validUrls;
+        } catch (error) {
+          throw new Error(error && error.message ? `Image upload failed: ${error.message}` : "Image upload failed.");
         } finally {
           this.clearFeedback();
         }

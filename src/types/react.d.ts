@@ -1,10 +1,11 @@
 import type { ComponentType } from "react";
+import type { OllowEditorUploadImage } from "./index";
 
 export interface OllowEditorReactProps {
   value?: string;
   onChange?: (html: string) => void;
   placeholder?: string;
-  uploadImage?: (file: File) => Promise<string> | string;
+  uploadImage?: OllowEditorUploadImage;
   readOnly?: boolean;
   className?: string;
 }

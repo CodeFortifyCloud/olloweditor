@@ -1,3 +1,3 @@
 # Next.js example
 
-See `page.tsx` for a minimal client-side integration target. Mark the file or a wrapper component with `"use client"` in a real Next.js app.
+See `page.tsx` for a client-side integration target. In practice, call a Next.js route handler or API route inside `uploadImage(file)` and return the image URL to the editor.

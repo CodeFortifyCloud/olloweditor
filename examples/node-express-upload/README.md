@@ -1,3 +1,3 @@
 # Node + Express upload example
 
-Expose image, gallery, and attachment upload endpoints, then pass those URLs through the editor `upload` option.
+Expose an image upload endpoint, return a public image URL from Express, and call that endpoint from the editor `uploadImage(file)` callback.
