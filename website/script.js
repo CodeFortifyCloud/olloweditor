@@ -190,18 +190,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  const copyButtons = document.querySelectorAll("[data-copy-command]");
+  const copyButtons = document.querySelectorAll("[data-copy-command], [data-copy], [data-copy-target]");
   copyButtons.forEach((button) => {
     if (!(button instanceof HTMLButtonElement)) return;
 
     const originalLabel = button.textContent ? button.textContent.trim() : "Copy";
 
     button.addEventListener("click", async () => {
-      const command = button.getAttribute("data-copy-command");
-      if (!command) return;
+      const explicitCopy = button.getAttribute("data-copy");
+      const copyCommand = button.getAttribute("data-copy-command");
+      const copyTarget = button.getAttribute("data-copy-target");
+
+      let textToCopy = explicitCopy || copyCommand || "";
+      if (!textToCopy && copyTarget) {
+        const target = document.querySelector(copyTarget);
+        textToCopy = target ? (target.textContent || "").trim() : "";
+      }
+      if (!textToCopy) return;
 
       try {
-        const copied = await copyTextToClipboard(command);
+        const copied = await copyTextToClipboard(textToCopy);
         if (!copied) return;
 
         button.textContent = "Copied!";

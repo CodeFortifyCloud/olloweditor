@@ -1438,6 +1438,63 @@ img {
   font-weight: 600;
 }
 
+.docs-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.docs-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(122, 148, 187, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #536479;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.docs-install-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 22px;
+  padding: 18px 20px;
+  border: 1px solid rgba(122, 148, 187, 0.2);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(47, 124, 255, 0.12), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(243, 248, 255, 0.86));
+  box-shadow: var(--shadow-soft);
+}
+
+.docs-install-copy {
+  min-width: 0;
+}
+
+.docs-install-copy p {
+  margin: 0 0 8px;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.docs-install-copy code {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.96rem;
+}
+
 .docs-section {
   scroll-margin-top: 108px;
 }
@@ -1497,6 +1554,52 @@ img {
   font-size: 0.9em;
 }
 
+.docs-code-block {
+  margin-top: 16px;
+}
+
+.docs-code-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.docs-code-toolbar span {
+  color: #60738f;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.docs-copy-btn {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(70, 216, 236, 0.32);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(47, 124, 255, 0.14), rgba(70, 216, 236, 0.18));
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.docs-copy-btn:hover,
+.docs-copy-btn:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(70, 216, 236, 0.54);
+  box-shadow: 0 10px 24px rgba(47, 124, 255, 0.12);
+}
+
+.docs-copy-btn:focus-visible {
+  outline: 2px solid rgba(70, 216, 236, 0.22);
+  outline-offset: 2px;
+}
+
 .docs-code {
   margin: 0;
   padding: 18px 20px;
@@ -1546,7 +1649,8 @@ img {
   margin-top: 0;
 }
 
-.docs-table-wrap {
+.docs-table-wrap,
+.docs-table-wrapper {
   width: 100%;
   overflow-x: auto;
 }
@@ -1585,6 +1689,40 @@ img {
 
 .docs-table tbody tr:last-child td {
   border-bottom: 0;
+}
+
+.docs-flow-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid rgba(47, 124, 255, 0.16);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(47, 124, 255, 0.08), rgba(70, 216, 236, 0.08));
+}
+
+.docs-flow-card-compact {
+  padding: 16px;
+}
+
+.docs-flow-step {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(122, 148, 187, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.docs-flow-arrow {
+  color: var(--primary-strong);
+  font-size: 1.05rem;
+  font-weight: 800;
 }
 
 .docs-toc-inner {
@@ -1628,6 +1766,10 @@ img {
   .docs-meta span {
     font-size: 0.88rem;
   }
+
+  .docs-install-card {
+    padding: 18px;
+  }
 }
 
 @media (max-width: 991px) {
@@ -1641,6 +1783,10 @@ img {
 
   .docs-feature-grid {
     grid-template-columns: 1fr;
+  }
+
+  .docs-install-card {
+    align-items: stretch;
   }
 
   .docs-sidebar,
@@ -1688,9 +1834,22 @@ img {
     align-items: flex-start;
   }
 
+  .docs-badge-row {
+    gap: 8px;
+  }
+
   .docs-meta span {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .docs-install-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .docs-copy-btn {
+    width: 100%;
   }
 
   .docs-table {
@@ -1721,6 +1880,11 @@ img {
   .docs-code {
     padding: 16px;
     border-radius: 16px;
+  }
+
+  .docs-code-toolbar {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .docs-code code {
