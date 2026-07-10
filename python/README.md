@@ -6,6 +6,8 @@
 
 It does not reimplement the editor in Python. The package ships the compiled JavaScript, CSS, and initialization assets, then provides Python helpers for serving those assets and wiring them into forms, templates, and APIs.
 
+The package metadata is prepared for PyPI as `olloweditor`, but publication is a separate release step. Until it is published, install it from the local repository checkout.
+
 ## Links
 
 - Main OllowEditor project: <https://github.com/jakiiii/olloweditor>
@@ -67,7 +69,16 @@ It does not reimplement the editor in Python. The package ships the compiled Jav
 
 ## Installation
 
-Base package only:
+Local development install from this repository:
+
+```bash
+cd python
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[all]"
+```
+
+Target PyPI install commands after publication:
 
 ```bash
 pip install olloweditor
