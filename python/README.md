@@ -1,121 +1,137 @@
-# olloweditor
+# OllowEditor for Python
 
 [![Python CI](https://github.com/jakiiii/olloweditor/actions/workflows/python-ci.yml/badge.svg)](https://github.com/jakiiii/olloweditor/actions/workflows/python-ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/jakiiii/olloweditor/blob/main/LICENSE)
 
-`olloweditor` packages the OllowEditor browser build for Python applications and adds framework integrations for Django, Django REST Framework, Flask, and FastAPI.
+A Python integration package for using OllowEditor with Django, Django REST Framework, Flask, and FastAPI.
 
-It does not reimplement the editor in Python. The package ships the compiled JavaScript, CSS, and initialization assets, then provides Python helpers for serving those assets and wiring them into forms, templates, and APIs.
+OllowEditor for Python packages the compiled OllowEditor browser assets and exposes framework-specific helpers for serving those assets and wiring the editor into forms, templates, and APIs. The editor itself remains a JavaScript and CSS application. This package does not reimplement the editor in Python.
 
-The package metadata is prepared for PyPI as `olloweditor`, but publication is a separate release step. Until it is published, install it from the local repository checkout.
+Official integrations are included for Django, Django REST Framework, Flask, and FastAPI. In all cases, OllowEditor runs in the browser, keeps a `<textarea>` synchronized with HTML, and your Python application receives that HTML string through normal form or API handling.
 
-## Links
+## Key features
 
-- Main OllowEditor project: <https://github.com/jakiiii/olloweditor>
-- Python documentation: <https://github.com/jakiiii/olloweditor/tree/main/python>
-- npm package: <https://www.npmjs.com/package/@codefortify/olloweditor>
-- GitHub repository: <https://github.com/jakiiii/olloweditor>
-- Issue tracker: <https://github.com/jakiiii/olloweditor/issues>
+### Python integration features
 
-## Features
-
+- Base installation without Django, Flask, FastAPI, or Django REST Framework dependencies
 - Packaged browser assets:
   - `olloweditor.browser.js`
   - `olloweditor.css`
   - `olloweditor-init.js`
-- Django:
-  - `OllowEditorField`
-  - `OllowEditorWidget`
-  - Django admin support through normal form generation
-  - staticfiles-compatible assets
-- Django REST Framework:
-  - `OllowEditorHTMLField` for HTML payload validation
-  - optional sanitizer callable
-- Flask:
-  - `OllowEditor(app)` and `init_app`
-  - packaged asset blueprint
-  - Jinja helpers
-- FastAPI:
-  - `mount_olloweditor`
-  - asset tag helper
-  - optional textarea helper
-- Example applications for all supported frameworks
-- Release verification script and automated quality checks
+- Resource helpers for packaged assets:
+  - `get_static_root()`
+  - `get_asset_path(filename)`
+  - `asset_exists(filename)`
+- Django form widget, model field, staticfiles integration, and admin compatibility
+- Django REST Framework serializer field for OllowEditor-generated HTML
+- Optional server-side sanitizer callback for Django REST Framework
+- Flask extension with a packaged asset blueprint and Jinja helpers
+- FastAPI static asset mounting and template helpers
+- Automatic initialization for multiple editor instances through shared data attributes
+- Per-editor configuration through widget options or `data-olloweditor-options`
 
-## Supported Versions
+### OllowEditor frontend capabilities
 
-- Python:
-  - 3.10
-  - 3.11
-  - 3.12
-  - 3.13
-- Framework extras:
-  - Django `>=4.2`
-  - Django REST Framework `>=3.15`
-  - Flask `>=3.0`
-  - FastAPI `>=0.110`
+- Rich-text formatting, typography controls, lists, and alignment
+- Links, bookmarks, images, galleries, tables, and code blocks
+- YouTube embeds and editorial content blocks
+- Markdown import/export, HTML export, and PDF export
+- DOCX import/export hooks
+- Themes, responsive toolbar behavior, and textarea synchronization
+- Browser plugin API for extending the editor
 
-## Architecture
+For the full editor feature set, configuration surface, and JavaScript integration details, see the main project README: <https://github.com/jakiiii/olloweditor>.
 
-`olloweditor` has three layers:
+## Supported environments
 
-1. JavaScript editor:
-   The existing OllowEditor browser bundle in `dist/` is the real editor implementation.
+| Component | Supported version |
+| --- | --- |
+| Python | `>=3.10` |
+| Django | `>=4.2` |
+| Django REST Framework | `>=3.15` |
+| Flask | `>=3.0` |
+| FastAPI | `>=0.110` |
 
-2. Packaged static assets:
-   The Python package includes synchronized copies of the browser bundle, CSS, and shared initializer under `olloweditor/static/olloweditor/`.
-
-3. Python integration layer:
-   Framework-specific helpers connect those assets to Django forms, DRF serializers, Flask templates, and FastAPI mounts.
+These are the package minimums defined in `pyproject.toml`. The automated test suite currently exercises supported integrations separately and validates packaged distributions, but minimum dependency versions and actively tested combinations are not the same guarantee.
 
 ## Installation
 
-Local development install from this repository:
-
-```bash
-cd python
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e ".[all]"
-```
-
-Target PyPI install commands after publication:
+### Base package
 
 ```bash
 pip install olloweditor
 ```
 
-Framework extras:
-
-```bash
-pip install "olloweditor[django]"
-pip install "olloweditor[drf]"
-pip install "olloweditor[flask]"
-pip install "olloweditor[fastapi]"
-pip install "olloweditor[all]"
-```
-
-Base installation does not require Django, DRF, Flask, or FastAPI.
-
-## Quick Start
+This installs the packaged OllowEditor assets and the framework-independent resource helpers. It does not install Django, Django REST Framework, Flask, or FastAPI.
 
 ### Django
 
-Install:
+```bash
+pip install "olloweditor[django]"
+```
+
+### Django REST Framework
+
+```bash
+pip install "olloweditor[drf]"
+```
+
+The `drf` extra also installs Django because Django REST Framework depends on it.
+
+### Flask
+
+```bash
+pip install "olloweditor[flask]"
+```
+
+### FastAPI
+
+```bash
+pip install "olloweditor[fastapi]"
+```
+
+### All integrations
+
+```bash
+pip install "olloweditor[all]"
+```
+
+Most applications should install only the extra they actually need.
+
+> The package metadata is ready for PyPI, but the public release has not yet been published. During development, install from an editable checkout or a locally built wheel.
+
+## Integration overview
+
+| Framework | Main integration |
+| --- | --- |
+| Django | Form widget, model field, staticfiles integration, and admin support |
+| Django REST Framework | Serializer field for OllowEditor-generated HTML |
+| Flask | Extension, packaged asset blueprint, and Jinja helpers |
+| FastAPI | StaticFiles mounting and template helpers |
+
+## Django quick start
+
+### Install
 
 ```bash
 pip install "olloweditor[django]"
 ```
 
-Register the app:
+### Add the application
 
 ```python
 INSTALLED_APPS = [
-    # ...
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     "olloweditor.apps.OllowEditorConfig",
 ]
 ```
 
-Use the model field:
+### Use the model field
 
 ```python
 from django.db import models
@@ -127,338 +143,188 @@ class Article(models.Model):
     content = OllowEditorField()
 ```
 
-Render the form normally:
-
-```django
-{{ form.media }}
-{{ form }}
-```
-
-The widget includes:
-
-- `olloweditor/olloweditor.css`
-- `olloweditor/olloweditor.browser.js`
-- `olloweditor/olloweditor-init.js`
-
-### Django REST Framework
-
-Install:
+Create and apply migrations:
 
 ```bash
-pip install "olloweditor[drf]"
+python manage.py makemigrations
+python manage.py migrate
 ```
 
-Use the serializer field:
-
-```python
-from rest_framework import serializers
-from olloweditor.integrations.drf import OllowEditorHTMLField
-
-
-class ArticleSerializer(serializers.Serializer):
-    title = serializers.CharField()
-    content = OllowEditorHTMLField(
-        allow_blank=True,
-        required=False,
-    )
-```
-
-Expected payload:
-
-```json
-{
-  "title": "Article title",
-  "content": "<p>Article content</p>"
-}
-```
-
-DRF integration validates HTML strings. It does not render the browser editor for API clients.
-
-### Flask
-
-Install:
-
-```bash
-pip install "olloweditor[flask]"
-```
-
-Create the extension:
-
-```python
-from flask import Flask
-from olloweditor.integrations.flask import OllowEditor
-
-
-app = Flask(__name__)
-olloweditor = OllowEditor(app)
-```
-
-Render assets in Jinja:
-
-```html
-{{ olloweditor_assets() }}
-
-<textarea
-    name="content"
-    data-olloweditor="true"
-></textarea>
-```
-
-Submitted HTML is available in Flask through:
-
-```python
-request.form["content"]
-```
-
-### FastAPI
-
-Install:
-
-```bash
-pip install "olloweditor[fastapi]"
-```
-
-Mount packaged assets:
-
-```python
-from fastapi import FastAPI
-from olloweditor.integrations.fastapi import mount_olloweditor
-
-
-app = FastAPI()
-mount_olloweditor(app)
-```
-
-Register the Jinja helper:
-
-```python
-from fastapi.templating import Jinja2Templates
-from olloweditor.integrations.fastapi import olloweditor_assets
-
-
-templates = Jinja2Templates(directory="templates")
-templates.env.globals["olloweditor_assets"] = olloweditor_assets
-```
-
-Template usage:
-
-```html
-{{ olloweditor_assets() }}
-
-<textarea
-    name="content"
-    data-olloweditor="true"
-></textarea>
-```
-
-Submitted HTML is available through:
-
-```python
-form = await request.form()
-content = form["content"]
-```
-
-FastAPI form parsing usually requires `python-multipart` in the application environment.
-
-## Core Asset Behavior
-
-The shared initializer uses:
-
-- `data-olloweditor="true"`
-- `data-olloweditor-options='{"theme":"auto"}'`
-
-Load order:
-
-```html
-<link rel="stylesheet" href="/static/olloweditor/olloweditor.css">
-
-<textarea
-  name="content"
-  data-olloweditor="true"
-  data-olloweditor-options='{"theme":"auto"}'></textarea>
-
-<script src="/static/olloweditor/olloweditor.browser.js"></script>
-<script src="/static/olloweditor/olloweditor-init.js"></script>
-```
-
-The initializer also exposes:
-
-```js
-window.bootOllowEditor(root)
-```
-
-Use that when markup is inserted dynamically after initial page load.
-
-## Django Integration
-
-### `INSTALLED_APPS`
-
-Add:
-
-```python
-"olloweditor.apps.OllowEditorConfig"
-```
-
-### `OllowEditorField`
-
-`OllowEditorField` extends `django.db.models.TextField` and uses `OllowEditorWidget` in generated ModelForms.
-
-```python
-from django.db import models
-from olloweditor.integrations.django import OllowEditorField
-
-
-class Article(models.Model):
-    content = OllowEditorField()
-```
-
-### `OllowEditorWidget`
-
-Use it with an existing field:
+### Use the widget with an existing field
 
 ```python
 from django import forms
 from olloweditor.integrations.django import OllowEditorWidget
 
+from .models import Article
+
 
 class ArticleForm(forms.ModelForm):
     content = forms.CharField(
         widget=OllowEditorWidget(
-            attrs={"rows": 12, "class": "editor-field"},
-            options={"theme": "auto"},
+            options={
+                "theme": "auto",
+            }
         )
     )
+
+    class Meta:
+        model = Article
+        fields = ["title", "content"]
 ```
 
-Widget behavior:
-
-- adds `data-olloweditor="true"`
-- serializes `options` to `data-olloweditor-options`
-- merges CSS classes without duplication
-- includes widget media for CSS and JavaScript
-
-### `form.media`
-
-Templates must render `form.media`:
+### Render the form
 
 ```django
-{{ form.media }}
-{{ form }}
+<form method="post">
+    {% csrf_token %}
+    {{ form.media }}
+    {{ form.as_p }}
+
+    <button type="submit">
+        Save article
+    </button>
+</form>
 ```
 
-### Admin
+`{{ form.media }}` loads:
 
-Models using `OllowEditorField` work in Django admin without extra code.
+- `olloweditor/olloweditor.css`
+- `olloweditor/olloweditor.browser.js`
+- `olloweditor/olloweditor-init.js`
 
-For an existing `TextField`, assign `OllowEditorWidget` in a custom `ModelForm` used by `ModelAdmin`.
-
-### Multiple editor fields
-
-Multiple widgets can appear on one page. Each textarea gets its own `data-olloweditor` boot path.
-
-### Configuration options
-
-Pass editor options through the widget:
-
-```python
-OllowEditorWidget(
-    options={
-        "theme": "auto",
-    }
-)
-```
-
-The package does not validate editor option names. They are forwarded to the browser API as JSON.
-
-### `collectstatic`
-
-In production, run:
+### Static files
 
 ```bash
 python manage.py collectstatic
 ```
 
-Django will collect the packaged assets under `olloweditor/`.
+Configure Django staticfiles normally for production.
 
-## Django REST Framework Integration
+### Django admin
 
-### `OllowEditorHTMLField`
+Models using `OllowEditorField` render with the editor in Django admin once `olloweditor.apps.OllowEditorConfig` is installed. For an existing `TextField`, use a custom form with `OllowEditorWidget` in the usual Django admin form override pattern.
 
-Use it for HTML string payloads:
+## Django REST Framework quick start
+
+Django REST Framework does not render the JavaScript editor for external API clients. It accepts and validates HTML generated by an OllowEditor frontend instance.
+
+### Install
+
+```bash
+pip install "olloweditor[drf]"
+```
+
+### Serializer example
 
 ```python
 from rest_framework import serializers
 from olloweditor.integrations.drf import OllowEditorHTMLField
 
+from .models import Article
 
-class ArticleSerializer(serializers.Serializer):
-    title = serializers.CharField()
-    content = OllowEditorHTMLField(allow_blank=True)
+
+class ArticleSerializer(serializers.ModelSerializer):
+    content = OllowEditorHTMLField(
+        allow_blank=True,
+        required=False,
+    )
+
+    class Meta:
+        model = Article
+        fields = [
+            "id",
+            "title",
+            "content",
+        ]
 ```
 
-### Payload format
-
-The backend receives editor output as an HTML string:
+### JSON request example
 
 ```json
 {
-  "title": "Article title",
-  "content": "<p>Article content</p>"
+  "title": "Introducing OllowEditor",
+  "content": "<p>Rich text generated by OllowEditor.</p>"
 }
 ```
 
-### Validation behavior
+### Sanitizer callback
 
-`OllowEditorHTMLField` keeps HTML whitespace by default and supports normal DRF `CharField` options, including:
-
-- `required`
-- `allow_blank`
-- `allow_null`
-- `max_length`
-- `min_length`
-- `validators`
-- `default`
-- `read_only`
-- `write_only`
-
-### Sanitizer callable
-
-You may provide a sanitizer:
+`OllowEditorHTMLField` accepts a sanitizer callable with the signature `Callable[[str], str]`.
 
 ```python
-def sanitize_html(value: str) -> str:
-    return value
+def sanitize_article_html(value: str) -> str:
+    return trusted_html_sanitizer.clean(value)
 
 
-content = OllowEditorHTMLField(sanitizer=sanitize_html)
+class ArticleSerializer(serializers.ModelSerializer):
+    content = OllowEditorHTMLField(
+        sanitizer=sanitize_article_html,
+    )
 ```
 
-Rules:
+`trusted_html_sanitizer` is intentionally application-chosen. This package does not bundle a server-side HTML sanitizer.
 
-- the sanitizer runs after normal string validation
-- it must return a string
-- exceptions become DRF `ValidationError`
+## Flask quick start
 
-### Frontend/backend responsibility
+### Install
 
-The browser editor produces HTML. DRF receives and validates that HTML. API consumers are responsible for sending the HTML string. The DRF integration does not embed the editor into API clients.
+```bash
+pip install "olloweditor[flask]"
+```
 
-## Flask Integration
-
-### `OllowEditor(app)`
+### Application setup
 
 ```python
-from flask import Flask
+from flask import Flask, render_template, request
 from olloweditor.integrations.flask import OllowEditor
 
 
 app = Flask(__name__)
 olloweditor = OllowEditor(app)
+
+
+@app.route("/", methods=["GET", "POST"])
+def index():
+    content = ""
+
+    if request.method == "POST":
+        content = request.form.get("content", "")
+
+    return render_template(
+        "index.html",
+        content=content,
+    )
 ```
 
-### `init_app`
+### Jinja template
 
-Application factory pattern:
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OllowEditor with Flask</title>
+
+    {{ olloweditor_assets() }}
+</head>
+<body>
+    <form method="post">
+        <textarea
+            id="content"
+            name="content"
+            data-olloweditor="true"
+        >{{ content }}</textarea>
+
+        <button type="submit">
+            Save article
+        </button>
+    </form>
+</body>
+</html>
+```
+
+### Application factory
 
 ```python
 from flask import Flask
@@ -474,279 +340,447 @@ def create_app() -> Flask:
     return app
 ```
 
-### Blueprint asset route
+The Flask integration also exposes an optional `olloweditor_textarea()` Jinja helper for library-generated textarea markup.
 
-The extension registers a blueprint named `olloweditor` and serves assets under `/olloweditor` by default.
+## FastAPI quick start
 
-Example asset URLs:
+### Install
 
-- `/olloweditor/olloweditor.css`
-- `/olloweditor/olloweditor.browser.js`
-- `/olloweditor/olloweditor-init.js`
+```bash
+pip install "olloweditor[fastapi]"
+```
 
-Change the prefix with:
+### Application setup
 
 ```python
-app.config["OLLOWEDITOR_URL_PREFIX"] = "/assets/editor"
-```
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
 
-### Jinja helper
-
-Use:
-
-```html
-{{ olloweditor_assets() }}
-```
-
-Optional helper:
-
-```html
-{{ olloweditor_textarea("content", "", id="content") }}
-```
-
-### Form submission
-
-Submitted HTML is available through:
-
-```python
-request.form["content"]
-```
-
-## FastAPI Integration
-
-### `mount_olloweditor`
-
-```python
-from fastapi import FastAPI
-from olloweditor.integrations.fastapi import mount_olloweditor
+from olloweditor.integrations.fastapi import (
+    mount_olloweditor,
+    olloweditor_assets,
+)
 
 
 app = FastAPI()
-mount_olloweditor(app)
-```
-
-Default mount path:
-
-```text
-/olloweditor/static
-```
-
-You can customize it:
-
-```python
-mount_olloweditor(app, path="/assets/editor", name="editor_static")
-```
-
-### `Jinja2Templates`
-
-Register the helper:
-
-```python
-from fastapi.templating import Jinja2Templates
-from olloweditor.integrations.fastapi import olloweditor_assets
-
 
 templates = Jinja2Templates(directory="templates")
+mount_olloweditor(app)
 templates.env.globals["olloweditor_assets"] = olloweditor_assets
+
+
+@app.get("/")
+def index(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "index.html",
+        {},
+    )
 ```
 
-Optional textarea helper:
-
-```python
-from olloweditor.integrations.fastapi import olloweditor_textarea
-
-templates.env.globals["olloweditor_textarea"] = olloweditor_textarea
-```
-
-### Template global
+### Jinja template
 
 ```html
-{{ olloweditor_assets() }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OllowEditor with FastAPI</title>
+
+    {{ olloweditor_assets() }}
+</head>
+<body>
+    <form method="post">
+        <textarea
+            id="content"
+            name="content"
+            data-olloweditor="true"
+        ></textarea>
+
+        <button type="submit">
+            Save article
+        </button>
+    </form>
+</body>
+</html>
 ```
 
-### Form submission
+Applications that process HTML form submissions may also need:
+
+```bash
+pip install python-multipart
+```
+
+`python-multipart` is not required just to mount or serve OllowEditor assets.
+
+The FastAPI integration also provides `olloweditor_textarea()` for applications that want a helper-generated `<textarea>`.
+
+## Base package and packaged assets
+
+Installing `pip install olloweditor` gives you the packaged assets and resource helpers even without a framework extra.
+
+Packaged runtime files:
+
+- `olloweditor.browser.js`
+- `olloweditor.css`
+- `olloweditor-init.js`
+
+Framework behavior:
+
+- Django discovers assets through staticfiles.
+- Flask serves them through the registered `olloweditor` blueprint.
+- FastAPI serves them through `StaticFiles` with `mount_olloweditor()`.
+- Base-package code can resolve them with `get_static_root()`, `get_asset_path()`, and `asset_exists()`.
+
+The shared initializer looks for:
+
+```html
+<textarea
+    id="content"
+    name="content"
+    data-olloweditor="true"
+    data-olloweditor-options='{"theme":"auto"}'
+></textarea>
+```
+
+It also exposes:
+
+```javascript
+window.bootOllowEditor(document);
+```
+
+Load order matters:
+
+1. `olloweditor.browser.js`
+2. `olloweditor-init.js`
+
+## Multiple editors
+
+Multiple editor instances on one page are supported.
+
+```html
+<textarea
+    name="summary"
+    data-olloweditor="true"
+></textarea>
+
+<textarea
+    name="content"
+    data-olloweditor="true"
+></textarea>
+```
+
+Each marked textarea receives an independent OllowEditor instance.
+
+## Per-editor configuration
+
+Pass JavaScript options through the Django widget or the shared data attribute.
+
+Django example:
 
 ```python
-form = await request.form()
-content = form["content"]
+from olloweditor.integrations.django import OllowEditorWidget
+
+
+widget = OllowEditorWidget(
+    options={
+        "theme": "auto",
+    }
+)
 ```
 
-### Static route configuration
+HTML example:
 
-`mount_olloweditor()` normalizes trailing slashes and rejects invalid mount paths such as the application root or empty strings.
-
-## Security
-
-OllowEditor generates HTML. That matters.
-
-- HTML from untrusted users may contain unsafe markup.
-- Client-side editor behavior is not a complete security boundary.
-- This package does not ship a default server-side HTML sanitizer.
-- Rendering stored HTML as safe must be an explicit application decision.
-- File uploads need their own validation and storage controls.
-- Allowed tags, attributes, URL schemes, file types, and file sizes should be restricted by the application.
-
-Typical production approach:
-
-1. accept HTML from the editor
-2. sanitize it on the server with a real HTML sanitizer chosen by the application
-3. store the sanitized or reviewed form
-4. render it only under an explicit trust policy
-
-Do not assume that the editor alone makes HTML safe.
-
-## Asset Handling
-
-The Python package ships synchronized copies of the built frontend assets under:
-
-```text
-olloweditor/static/olloweditor/
+```html
+<textarea
+    name="content"
+    data-olloweditor="true"
+    data-olloweditor-options='{"theme":"auto"}'
+></textarea>
 ```
+
+For the full JavaScript option surface, use the main OllowEditor configuration documentation:
+
+- <https://github.com/jakiiii/olloweditor/blob/main/docs/configuration.md>
+
+## Working with submitted content
+
+OllowEditor synchronizes HTML back into the original textarea. Your backend receives a normal HTML string and remains responsible for validation, sanitization, storage, and rendering policy.
 
 ### Django
 
-Django serves them through `staticfiles`. Render `form.media` and run `collectstatic` in production.
+```python
+content = request.POST.get("content", "")
+```
 
 ### Flask
 
-Flask serves them through the `olloweditor` blueprint. URLs are generated by `url_for`.
+```python
+content = request.form.get("content", "")
+```
 
 ### FastAPI
 
-FastAPI serves them through `mount_olloweditor()` using Starlette `StaticFiles`.
+```python
+from typing import Annotated
 
-### Custom asset paths and CDN-style setups
+from fastapi import Form
 
-Built-in helpers support:
 
-- Django via your normal staticfiles path and `STATIC_URL`
-- Flask via `OLLOWEDITOR_URL_PREFIX`
-- FastAPI via the `path` argument to `mount_olloweditor()` and `olloweditor_assets(path=...)`
+@app.post("/articles")
+def create_article(
+    content: Annotated[str, Form()],
+):
+    return {
+        "content": content,
+    }
+```
 
-The package does not currently provide a dedicated CDN URL helper. If you publish the packaged files through your own asset pipeline or CDN, use the same filenames and framework-specific URL generation strategy on your side.
+### Django REST Framework JSON API
 
-### Rebuild and synchronize assets
+```json
+{
+  "content": "<p>Article content</p>"
+}
+```
+
+## Security and HTML sanitization
+
+OllowEditor generates HTML. Treat that as application content, not as inherently trusted markup.
+
+- Client-side cleanup and sanitization are not a complete security boundary.
+- Untrusted HTML can still create XSS and related rendering risks.
+- Python applications should validate and sanitize untrusted HTML server-side before rendering it.
+- Your application should define allowed tags, attributes, URL schemes, image sources, and embed providers.
+- Upload endpoints need their own authorization, CSRF, MIME-type, extension, size, filename, and storage validation.
+- Authentication and authorization remain the responsibility of the host application.
+- Django `safe`, Jinja `safe`, `Markup`, or equivalent trust markers should be used only after content has been sanitized or otherwise explicitly trusted.
+
+For uploads and rich embeds, also consider image dimensions, storage policy, and rate limits where relevant.
+
+More security guidance:
+
+- <https://github.com/jakiiii/olloweditor/blob/main/python/docs/security.md>
+- <https://github.com/jakiiii/olloweditor/blob/main/docs/security.md>
+
+## Framework dependency isolation
+
+The base package is intentionally lightweight:
+
+```bash
+pip install olloweditor
+```
+
+That installation does not pull in all supported frameworks. Install only what you need:
+
+```bash
+pip install "olloweditor[django]"
+```
+
+This avoids unnecessary framework dependencies and reduces conflict risk in applications that only use one integration.
+
+## Example applications
+
+Runnable examples are included for every supported integration:
+
+- [Django example](https://github.com/jakiiii/olloweditor/tree/main/python/examples/django_example)
+  - Model field, forms, admin, and staticfiles integration
+- [Django REST Framework example](https://github.com/jakiiii/olloweditor/tree/main/python/examples/drf_example)
+  - HTML API input plus a small package-backed frontend page
+- [Flask example](https://github.com/jakiiii/olloweditor/tree/main/python/examples/flask_example)
+  - Extension registration, packaged assets, and form submission
+- [FastAPI example](https://github.com/jakiiii/olloweditor/tree/main/python/examples/fastapi_example)
+  - Static mount, Jinja template helper, and form handling
+
+There is also an example index:
+
+- <https://github.com/jakiiii/olloweditor/blob/main/python/examples/README.md>
+
+## Development setup
 
 From the repository root:
 
 ```bash
+npm ci
 npm run build
+npm run typecheck
+npm test
 npm run build:python-assets
 npm run verify:python-assets
 ```
 
-## Development
-
-From the repository root:
+Then set up the Python environment:
 
 ```bash
 cd python
+
 python3 -m venv .venv
 source .venv/bin/activate
+
 python -m pip install --upgrade pip
-python -m pip install -e ".[dev,test]"
-python scripts/verify_release.py
+python -m pip install -e ".[all,dev,test]"
 ```
 
-Useful commands:
+Run Python checks:
 
 ```bash
 python -m pytest
-python -m pytest --cov=olloweditor
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy src
+```
+
+## Building the Python package
+
+```bash
+rm -rf build dist src/*.egg-info
+
 python -m build
 python -m twine check dist/*
 ```
 
-## Build and Release
+Expected outputs:
 
-Recommended order:
+- `dist/olloweditor-<version>-py3-none-any.whl`
+- `dist/olloweditor-<version>.tar.gz`
 
-1. build JavaScript assets
-2. synchronize Python assets
-3. verify synchronized Python assets
-4. run `python/scripts/verify_release.py`
+## Local wheel testing
 
-Single release verification command:
+Test the built wheel directly:
 
 ```bash
-cd python
-python scripts/verify_release.py
+pip install dist/olloweditor-<version>-py3-none-any.whl
 ```
+
+With an extra:
+
+```bash
+pip install "olloweditor[django] @ file:///path/to/dist/olloweditor-<version>-py3-none-any.whl"
+```
+
+Release validation should use the built wheel, not only an editable installation.
+
+## TestPyPI and PyPI status
+
+The package metadata is prepared for PyPI, but the release audit currently recommends a TestPyPI rehearsal before a real PyPI release.
+
+Release-oriented references:
+
+- [Release audit](https://github.com/jakiiii/olloweditor/blob/main/python/RELEASE_AUDIT.md)
+- [Release notes](https://github.com/jakiiii/olloweditor/blob/main/python/docs/release.md)
+
+After the first real PyPI publication, this README should be updated to remove the pre-publication note and add the production PyPI project link.
+
+## Relationship to the npm package
+
+The npm package is the direct frontend package for JavaScript build pipelines:
+
+```bash
+npm install @codefortify/olloweditor
+```
+
+Use the npm package when your application wants to consume OllowEditor directly from a frontend toolchain. Use the Python package when you want bundled assets and framework-specific integration helpers in Django, Django REST Framework, Flask, or FastAPI.
+
+Main project documentation:
+
+- <https://github.com/jakiiii/olloweditor>
+- <https://github.com/jakiiii/olloweditor/blob/main/README.md>
 
 ## Troubleshooting
 
 ### The editor does not appear
 
-- check that both JavaScript files are loaded:
-  - `olloweditor.browser.js`
-  - `olloweditor-init.js`
-- check that the textarea has `data-olloweditor="true"`
-- check browser console errors
+Check:
 
-### CSS is not loading
+- the required assets are loaded
+- the browser console for initialization errors
+- `data-olloweditor="true"` is present on the `<textarea>`
+- `olloweditor.browser.js` is loaded before `olloweditor-init.js`
+- the same element is not being initialized twice
 
-- Django: confirm `form.media` is rendered and `collectstatic` is configured
-- Flask: confirm the blueprint path is reachable
-- FastAPI: confirm the mount path matches the helper path
+### Django assets return 404
 
-### `window.OllowEditor` is missing
+Check:
 
-- make sure the browser bundle is loaded before the initializer
-- make sure you are serving `olloweditor.browser.js`, not an ES module build
+- `django.contrib.staticfiles` is installed
+- `olloweditor.apps.OllowEditorConfig` is in `INSTALLED_APPS`
+- `collectstatic` has been run where required
+- production static asset serving is configured correctly
 
-### Django `collectstatic` problems
+### `form.media` is missing
 
-- confirm `olloweditor.apps.OllowEditorConfig` is in `INSTALLED_APPS`
-- confirm staticfiles is enabled
-- rerun `python manage.py collectstatic`
+Make sure the template renders:
 
-### Flask blueprint conflict
+```django
+{{ form.media }}
+```
 
-- the extension uses the `olloweditor` blueprint name
-- do not register a conflicting blueprint on the same app
-- use `OLLOWEDITOR_URL_PREFIX` to change the served path if needed
+### Flask assets return 404
 
-### FastAPI mount conflict
+Check:
 
-- `mount_olloweditor()` rejects duplicate mount names and conflicting mount paths
-- pass a different `path` or `name` when the app already uses that route
+- `OllowEditor(app)` or `olloweditor.init_app(app)` was called
+- the Blueprint URL prefix is what you expect
+- the template is using `{{ olloweditor_assets() }}`
 
-### Multiple initialization
+### FastAPI assets return 404
 
-- the shared initializer prevents duplicate initialization on the same marked element
-- repeated calls to `window.bootOllowEditor(root)` should target newly inserted content
+Check:
 
-### Invalid `data-olloweditor-options` JSON
+- `mount_olloweditor(app)` was called
+- the mount path matches the helper output
+- another route is not already using the same mount path
 
-- invalid JSON does not stop the whole page
-- the initializer logs a console error and continues with other elements
+### ImportError for a framework
 
-### Installed without the required framework extra
+Install the matching extra:
 
-- base `pip install olloweditor` does not install framework dependencies
-- install the needed extra:
-  - `pip install "olloweditor[django]"`
-  - `pip install "olloweditor[drf]"`
-  - `pip install "olloweditor[flask]"`
-  - `pip install "olloweditor[fastapi]"`
+```bash
+pip install "olloweditor[flask]"
+```
 
-## Additional Documentation
+### Invalid editor options
 
-- [Installation](docs/installation.md)
-- [Django](docs/django.md)
-- [Django REST Framework](docs/drf.md)
-- [Flask](docs/flask.md)
-- [FastAPI](docs/fastapi.md)
-- [Configuration](docs/configuration.md)
-- [Assets](docs/assets.md)
-- [Security](docs/security.md)
-- [Development](docs/development.md)
-- [Release](docs/release.md)
-- [Troubleshooting](docs/troubleshooting.md)
+`data-olloweditor-options` must contain valid JSON that decodes to an object.
+
+## Testing and quality
+
+The repository includes:
+
+- Python unit tests for the base package
+- Django integration tests
+- Django REST Framework integration tests
+- Flask integration tests
+- FastAPI integration tests
+- static asset tests
+- wheel-content verification
+- clean-install verification
+- example smoke tests
+
+See the release audit for the current release-readiness result:
+
+- <https://github.com/jakiiii/olloweditor/blob/main/python/RELEASE_AUDIT.md>
+
+## Contributing
+
+To contribute:
+
+1. Fork the repository.
+2. Create a branch for your change.
+3. Add or update tests.
+4. Run the frontend and Python verification commands.
+5. Submit a pull request.
 
 ## License
 
-MIT
+OllowEditor is released under the [MIT License](https://github.com/jakiiii/olloweditor/blob/main/LICENSE).
+
+## Project links
+
+- Main repository: <https://github.com/jakiiii/olloweditor>
+- Main OllowEditor README: <https://github.com/jakiiii/olloweditor/blob/main/README.md>
+- Python package directory: <https://github.com/jakiiii/olloweditor/tree/main/python>
+- Python docs:
+  - <https://github.com/jakiiii/olloweditor/tree/main/python/docs>
+- npm package: <https://www.npmjs.com/package/@codefortify/olloweditor>
+- Issue tracker: <https://github.com/jakiiii/olloweditor/issues>
