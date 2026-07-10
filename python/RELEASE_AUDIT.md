@@ -1,101 +1,216 @@
-# OllowEditor Python Release Audit
+# OllowEditor Full Project Audit
 
-- Release version: `0.1.0`
-- Date: `2026-07-10`
-- Git commit audited: release-audit commit in repository history
-- Final recommendation: `GO — Ready for TestPyPI`
+## Audit information
 
-## Commands run
+- Audit date: `2026-07-10`
+- Git commit hash: `e8a8097240cafc89ae59b11e7c03abc110a322fa`
+- npm package: `@codefortify/olloweditor`
+- npm package version: `0.1.0`
+- Python package: `olloweditor`
+- Python package version: `0.1.0`
+- Node.js: `v24.13.0`
+- npm: `11.6.2`
+- Python: `3.12.3`
+- Operating system: `Linux jaki 6.17.0-35-generic x86_64`
 
-From repository root:
+## Executive summary
+
+The JavaScript package, browser bundle, Python package, packaged assets, and all four framework integrations build and test successfully from the current repository state. The Python wheel installs cleanly in isolated environments for the base package and every documented extra. `twine check` passes, required static assets are present in both wheel and source distribution, and the package name `olloweditor` is currently available on both PyPI and TestPyPI for version `0.1.0`.
+
+This audit does not justify a direct PyPI release before a TestPyPI rehearsal. The current state is ready for that next step. The only in-scope defect fixed during the audit was a missing root `LICENSE` file, which mattered for repository and npm package clarity.
+
+Final recommendation: `GO — Ready for TestPyPI`
+
+## Audit scorecard
+
+| Area | Status | Notes |
+| --- | --- | --- |
+| JavaScript core | PASS | Editor runtime, textarea sync, multiple instances, plugin registration, and browser facade verified. |
+| Browser build | PASS | `dist/olloweditor.browser.js` and `dist/olloweditor.css` rebuilt successfully; bundle exposes `window.OllowEditor`. |
+| npm package | PASS | `package.json` metadata, exports, build scripts, and prepublish checks are coherent. |
+| Python package | PASS | `pyproject.toml`, extras, package data, metadata, and source layout are valid. |
+| Static assets | PASS | Sync and verification scripts passed; wheel contains required assets. |
+| Django | PASS | Widget, field, admin, staticfiles, and example/test coverage passed. |
+| DRF | PASS | `OllowEditorHTMLField` behavior and serializer integration passed. |
+| Flask | PASS | Extension, blueprint, Jinja helper, and asset serving passed. |
+| FastAPI | PASS | Static mount, asset helper, and example/test coverage passed. |
+| Security | PASS | No critical client/server trust bugs found; documentation correctly avoids overstating client-side sanitization. |
+| Documentation | WARNING | Root `CHANGELOG.md`, `CONTRIBUTING.md`, and `SECURITY.md` are absent; this is not blocking TestPyPI. |
+| Tests | PASS | Frontend tests, Python tests, coverage, lint, formatting, type checks, wheel checks, and isolated installs passed. |
+| CI | PASS | CI and Trusted Publishing workflows exist and cover the release path. |
+| PyPI readiness | PASS | Package builds, validates, installs cleanly, and name/version availability checks passed. |
+
+## Repository inspection summary
+
+Present and reviewed:
+
+- `README.md`
+- `LICENSE` (added during this audit)
+- `package.json`
+- `package-lock.json`
+- `tsconfig.json`
+- `ollow.js`
+- `ollow.css`
+- `dist/`
+- `tests/browser/`
+- `examples/browser/basic.html`
+- `docs/`
+- `python/`
+- `.github/workflows/`
+- `.gitignore`
+
+Missing at repository root:
+
+- `CHANGELOG.md`
+- `CONTRIBUTING.md`
+- `SECURITY.md`
+- `vite.config.*`
+- `rollup.config.*`
+- `src/`
+- `tests/` outside browser tests
+- `yarn.lock`
+- `pnpm-lock.yaml`
+- `.npmignore`
+
+These missing files are acceptable for the current implementation except the root `LICENSE`, which was added as part of this audit.
+
+## Public API verification
+
+Verified browser global API on `window.OllowEditor`:
+
+- `create(target, options)`
+- `init(target, options)` as an alias
+- `initAll(root, options)`
+- `get(target)`
+- `instances()`
+- `registerPlugin(name, factory)`
+- `version`
+
+Verified instance methods in the runtime include:
+
+- `getHTML()`
+- `setHTML(html)`
+- `sync()`
+- `focus()`
+- `clear()`
+- `destroy()`
+
+Module surfaces verified:
+
+- ES module: `dist/olloweditor.es.js`
+- CommonJS: `dist/olloweditor.cjs`
+- React: `dist/olloweditor-react.es.js`, `dist/olloweditor-react.cjs`
+- TypeScript declarations: `dist/index.d.ts`, `dist/react.d.ts`
+
+The browser bundle contains no top-level `import` or `export` statements and includes the expected browser global.
+
+## Feature audit summary
+
+The repository implements the major documented editing surface, including typography controls, headings, colors, highlight, alignment, lists, blockquotes, links, bookmarks, images, galleries, tables, code blocks, YouTube embeds, attachments, fact boxes, related-content blocks, find/replace, source mode, special characters, emoji, Markdown import/export, HTML export, PDF export, DOCX import/export hooks, responsive toolbar behavior, plugin registration, textarea synchronization, multiple instances, React integration, and TypeScript support.
+
+The implementation distinction that matters for release documentation is already correct:
+
+- PDF export uses the browser print flow.
+- DOCX import/export require optional browser adapters where documented.
+- Client-side sanitization exists, but it is not a server-side trust boundary.
+
+## Security findings
+
+### Informational
+
+1. Client-side sanitization is strong but intentionally not treated as sufficient for untrusted content.
+   - Status: documented correctly.
+   - Impact: host applications still need server-side sanitization before rendering untrusted HTML.
+
+2. FastAPI tests emit a `StarletteDeprecationWarning` about `TestClient` and `httpx`.
+   - Status: non-blocking.
+   - Impact: runtime package is fine; this only affects future test-stack maintenance.
+
+No Critical, High, or Medium severity release blockers were identified.
+
+## Commands executed
+
+From the repository root:
 
 ```bash
 npm ci
 npm run build
 npm run typecheck
+npm test
 npm run build:python-assets
 npm run verify:python-assets
-npm test
 ```
 
-From `python/` after recreating a clean virtual environment:
+From `python/`:
 
 ```bash
-rm -rf .venv build dist src/*.egg-info
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev,test,all]"
-python -m pytest --cov=olloweditor
-python -m ruff check .
-python -m ruff format --check .
-python -m mypy src
-python -m build
-python -m twine check dist/*
-python scripts/check_wheel_contents.py dist/*.whl
-python scripts/verify_wheel_installs.py dist/*.whl
-python scripts/validate_publish_release.py --release-tag v0.1.0 --skip-git-check
-python scripts/check_pypi_status.py olloweditor 0.1.0
+python3 -m venv .venv-audit
+./.venv-audit/bin/python -m pip install --upgrade pip
+./.venv-audit/bin/python -m pip install -e ".[all,dev,test]"
+./.venv-audit/bin/python -m pytest
+./.venv-audit/bin/python -m ruff check .
+./.venv-audit/bin/python -m ruff format --check .
+./.venv-audit/bin/python -m mypy src
+rm -rf build dist src/*.egg-info
+./.venv-audit/bin/python -m build
+./.venv-audit/bin/python -m twine check dist/*
+./.venv-audit/bin/python scripts/check_wheel_contents.py dist/*.whl
+./.venv-audit/bin/python scripts/verify_wheel_installs.py dist/*.whl
+./.venv-audit/bin/python scripts/check_pypi_status.py olloweditor 0.1.0
 ```
 
-Additional audit-only smoke checks:
+Additional audit checks:
 
 ```bash
-python - <<'PY'
-# clean-wheel runtime smoke checks for:
-# base, django, drf, flask, fastapi, all
-PY
+node -e "const fs=require('fs'); const s=fs.readFileSync('dist/olloweditor.browser.js','utf8'); ..."
 ```
 
-## Test results
+## Command results
 
-- Frontend build: passed
-- Frontend typecheck: passed
-- Frontend browser tests: `13 passed`
-- Python test suite: `79 passed`
-- Ruff: passed
-- Formatting check: passed
-- mypy: passed
-- Twine metadata check: passed
-- Wheel contents check: passed
-- Source distribution inspection: passed
-- Clean wheel installs: passed for base, django, drf, flask, fastapi, all
-- Example smoke tests: passed through `tests/test_examples.py`
-
-## Coverage
-
-- Total coverage: `86.73%`
-- Threshold: `85%`
-- Status: passed
-
-Observed non-blocking warning:
-
-- FastAPI test suite emits `StarletteDeprecationWarning` about `starlette.testclient` and `httpx`
-- A clean `olloweditor[fastapi]` runtime environment does not include `httpx2`, so `TestClient` is not available there by default
-- This is not a runtime integration failure because `httpx`/`httpx2` are test-only concerns and are provided by the test dependency set, not the FastAPI runtime extra
+- `npm ci`: passed
+- `npm run build`: passed
+- `npm run typecheck`: passed
+- `npm test`: passed, `13/13`
+- `npm run build:python-assets`: passed
+- `npm run verify:python-assets`: passed
+- `pytest`: passed, `79/79`
+- coverage: passed, `86.73%` with `85%` threshold
+- `ruff check`: passed
+- `ruff format --check`: passed
+- `mypy src`: passed
+- `python -m build`: passed
+- `twine check dist/*`: passed
+- `check_wheel_contents.py`: passed
+- `verify_wheel_installs.py`: passed
+- `check_pypi_status.py`: passed
 
 ## Build artifacts
 
-Frontend outputs:
+JavaScript outputs confirmed:
 
 - `dist/olloweditor.browser.js`
 - `dist/olloweditor.css`
-- existing npm outputs also present:
-  - `dist/olloweditor.es.js`
-  - `dist/olloweditor.cjs`
-  - `dist/olloweditor-react.es.js`
-  - `dist/olloweditor-react.cjs`
-  - `dist/index.d.ts`
-  - `dist/react.d.ts`
+- `dist/olloweditor.es.js`
+- `dist/olloweditor.cjs`
+- `dist/olloweditor-react.es.js`
+- `dist/olloweditor-react.cjs`
+- `dist/index.d.ts`
+- `dist/react.d.ts`
 
 Python distributions:
 
-- `python/dist/olloweditor-0.1.0-py3-none-any.whl`
-- `python/dist/olloweditor-0.1.0.tar.gz`
+- `python/dist/olloweditor-0.1.0-py3-none-any.whl` (`115K`)
+- `python/dist/olloweditor-0.1.0.tar.gz` (`125K`)
 
-## Wheel contents
+Packaged asset sizes:
 
-Verified required packaged assets:
+- `olloweditor.browser.js`: `476412` bytes
+- `olloweditor.css`: `82883` bytes
+- `olloweditor-init.js`: `4752` bytes
+
+## Wheel and source distribution verification
+
+Verified wheel contents include:
 
 - `olloweditor/static/olloweditor/olloweditor.browser.js`
 - `olloweditor/static/olloweditor/olloweditor.css`
@@ -103,142 +218,139 @@ Verified required packaged assets:
 - `olloweditor/static/olloweditor/.asset-manifest.json`
 - `olloweditor/static/olloweditor/GENERATED.txt`
 
-Sizes observed:
-
-- `olloweditor.browser.js`: `476412` bytes
-- `olloweditor.css`: `82883` bytes
-- `olloweditor-init.js`: `4752` bytes
-
-Source distribution inspection also confirmed these assets are included.
+The source distribution also includes the packaged static assets and the Python test suite required for downstream validation.
 
 ## Clean installation results
 
-Base wheel install:
+| Install mode | Result | Notes |
+| --- | --- | --- |
+| Base wheel | PASS | `import olloweditor` succeeded. |
+| `django` extra | PASS | `import olloweditor.integrations.django` succeeded. |
+| `drf` extra | PASS | `import olloweditor.integrations.drf` succeeded. |
+| `flask` extra | PASS | `import olloweditor.integrations.flask` succeeded. |
+| `fastapi` extra | PASS | `import olloweditor.integrations.fastapi` succeeded. |
+| `all` extra | PASS | Combined install completed without dependency conflicts. |
 
-- `import olloweditor`: passed
-- packaged assets resolved through `olloweditor.resources`: passed
-- unnecessary frameworks absent:
-  - `django`
-  - `rest_framework`
-  - `flask`
-  - `fastapi`
+Base environment dependency isolation was verified: `django`, `rest_framework`, `flask`, and `fastapi` were not installed.
 
-Extra installs:
+## Framework results
 
-- `olloweditor[django]`: import and widget render smoke test passed
-- `olloweditor[drf]`: import and serializer field validation smoke test passed
-- `olloweditor[flask]`: import, blueprint asset response, and Jinja helper smoke test passed
-- `olloweditor[fastapi]`: import, mount registration, and asset helper smoke test passed
-- `olloweditor[all]`: combined import and helper smoke test passed
+### Django
 
-## Framework smoke-test results
+- `OllowEditorWidget` media and attribute behavior passed.
+- `OllowEditorField` migration and formfield behavior passed.
+- Admin integration tests passed.
+- Static asset discovery path is correct.
 
-Django:
+### Django REST Framework
 
-- widget media includes required assets
-- model/admin integration covered by test suite
-- example routes and staticfiles path smoke-tested
+- `OllowEditorHTMLField` preserves whitespace as expected.
+- Blank, required, validator, sanitizer, and serialization behavior passed.
+- API role is correctly limited to HTML string validation, not editor rendering.
 
-DRF:
+### Flask
 
-- HTML field validation covered
-- serializer usage covered
-- example API create/list path smoke-tested
+- `OllowEditor(app)` and `init_app()` patterns passed.
+- Blueprint asset routes returned expected responses.
+- Jinja asset helper passed.
+- Multiple app support passed.
 
-Flask:
+### FastAPI
 
-- extension init patterns covered
-- asset blueprint response covered
-- example form flow smoke-tested
+- `mount_olloweditor()` static mount passed.
+- Asset helper output passed.
+- Jinja integration tests passed.
+- Multiple app support passed.
 
-FastAPI:
+## Documentation accuracy
 
-- mount helper and asset tags covered
-- example routes smoke-tested
-- runtime extra is valid without bundling test-only client dependencies
+Verified:
 
-## Security review
+- npm package name: `@codefortify/olloweditor`
+- Python package name: `olloweditor`
+- install commands in root and Python READMEs align with implemented package surfaces
+- browser bundle filenames match the build
+- framework integration import paths match source code
+- security guidance does not claim client-side sanitization is sufficient
 
-Reviewed for accidental secrets and unsafe defaults.
+Warnings:
 
-Findings:
+- Root repository still lacks top-level `CHANGELOG.md`, `CONTRIBUTING.md`, and `SECURITY.md`.
+- This does not block TestPyPI, but it is worth correcting before broader public distribution.
 
-- no PyPI tokens, API tokens, private keys, or GitHub tokens found in tracked files
-- example Django and Flask apps contain explicit non-production placeholder secrets only
-- no committed virtual environments or cache directories are tracked
-- no source maps are tracked or shipped
-- no automatic server-side HTML trust was found in Django, DRF, Flask, or FastAPI integrations
-- documentation consistently warns that untrusted HTML must be sanitized before rendering
-- Flask and FastAPI helpers use controlled `Markup` only for library-generated HTML, not arbitrary user content
-- path traversal protections in `resources.py` remain covered by tests
+## CI and publishing workflow review
 
-## Documentation review
-
-Reviewed:
-
-- `python/README.md`
-- `python/docs/*.md`
-- framework example READMEs
-- website links that point back to the repository
-
-Findings:
-
-- install commands match implemented extras
-- framework examples align with actual integration APIs
-- security guidance is present across README, docs, and examples
-- unsupported feature claims were not found in the Python docs set reviewed
-- repository URLs were inconsistent before the audit and were corrected to the actual repository owner `jakiiii`
-- no `Flast` typo found
-
-## CI status
-
-Current workflows present:
+Verified workflows:
 
 - `.github/workflows/python-ci.yml`
 - `.github/workflows/publish-python.yml`
 
-Verified behavior:
+Verified CI coverage includes:
 
-- CI covers frontend build, browser bundle tests, Python tests, example smoke tests, asset verification, wheel build, and install isolation
-- Trusted Publishing workflow requires:
-  - a published GitHub release
-  - successful build job completion
-  - protected `pypi` environment approval if configured
-  - PyPI OIDC trusted publisher configuration
+- frontend install/build/typecheck/tests
+- Python asset synchronization and verification
+- Python test matrix for `3.10`, `3.11`, `3.12`, `3.13`
+- wheel and sdist build
+- `twine check`
+- wheel content inspection
+- clean-install isolation checks
+- example smoke tests
 
-## Publishing readiness
+Verified publishing design:
 
-Version and index checks:
+- release-triggered Trusted Publishing workflow
+- protected environment: `pypi`
+- OIDC-based publish step
+- build once, publish built artifact
+- no long-lived PyPI token committed
 
-- `python/pyproject.toml` version: `0.1.0`
+## PyPI availability and version review
+
+- PyPI: package available; version `0.1.0` not published
+- TestPyPI: package available; version `0.1.0` not published
 - `package.json` version: `0.1.0`
-- release tag validation script accepts `v0.1.0`
-- PyPI status: package name available, version not published
-- TestPyPI status: package name available, version not published
+- `python/pyproject.toml` version: `0.1.0`
 
-Trusted Publishing prerequisites still manual:
+Version alignment is correct for this release candidate.
 
-- configure PyPI trusted publisher for:
-  - owner: `jakiiii`
-  - repository: `olloweditor`
-  - workflow: `.github/workflows/publish-python.yml`
-  - environment: `pypi`
-- create and protect the GitHub `pypi` environment
+## Files changed during audit
 
-## Blockers
+- `LICENSE`
+  - Added a root MIT license file to match `package.json` and repository usage.
+- `python/RELEASE_AUDIT.md`
+  - Rewritten with the current audit evidence and release recommendation.
 
-None found.
+## Release blockers
 
-## In-scope fixes made during audit
+None for TestPyPI.
 
-- corrected repository URLs in:
-  - `package.json`
-  - `python/pyproject.toml`
-  - `python/README.md`
-  - `website/index.html`
-  - `website/documentation.html`
-- refreshed `python/src/olloweditor/static/olloweditor/.asset-manifest.json` during asset rebuild
+## Non-blocking improvements
 
-## Go/No-Go
+1. Add root `CHANGELOG.md`, `CONTRIBUTING.md`, and `SECURITY.md`.
+2. Replace the FastAPI `TestClient` deprecation path before it becomes a breaking test issue.
+3. Re-run the same release flow on CI immediately before publication to catch environment drift.
+
+## Final decision
 
 `GO — Ready for TestPyPI`
+
+## Next manual steps
+
+1. Re-run the release verification on the exact commit to publish.
+2. Upload the built distributions to TestPyPI:
+
+```bash
+cd python
+./.venv-audit/bin/python -m twine upload --repository testpypi dist/*
+```
+
+3. Install from TestPyPI in a clean environment:
+
+```bash
+python -m pip install \
+  --index-url https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ \
+  "olloweditor[all]"
+```
+
+4. Smoke-test the base package and each framework integration from the TestPyPI index before any real PyPI release.
