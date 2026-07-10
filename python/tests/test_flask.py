@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+import json
+import re
+from html import unescape
+
 from flask import Flask, render_template_string
 
 from olloweditor.integrations.flask import OllowEditor
+
+DATA_OPTIONS_RE = re.compile(r'data-olloweditor-options="([^"]+)"')
 
 
 def create_app(*, prefix: str | None = None) -> Flask:
@@ -10,6 +16,12 @@ def create_app(*, prefix: str | None = None) -> Flask:
     if prefix is not None:
         app.config["OLLOWEDITOR_URL_PREFIX"] = prefix
     return app
+
+
+def _extract_options(html: str) -> dict[str, object]:
+    match = DATA_OPTIONS_RE.search(html)
+    assert match is not None
+    return json.loads(unescape(match.group(1)))
 
 
 def test_direct_initialization_with_app() -> None:
@@ -47,27 +59,34 @@ def test_asset_urls_and_jinja_helper_availability() -> None:
     assert "/olloweditor/olloweditor.css" in rendered
     assert "/olloweditor/olloweditor.browser.js" in rendered
     assert "/olloweditor/olloweditor-init.js" in rendered
-    assert rendered.index("olloweditor.css") < rendered.index("olloweditor.browser.js") < rendered.index("olloweditor-init.js")
+    assert (
+        rendered.index("olloweditor.css")
+        < rendered.index("olloweditor.browser.js")
+        < rendered.index("olloweditor-init.js")
+    )
 
 
-def test_css_response() -> None:
+def test_css_response_includes_expected_mime_type() -> None:
     app = create_app()
     OllowEditor(app)
     client = app.test_client()
     response = client.get("/olloweditor/olloweditor.css")
     assert response.status_code == 200
+    assert response.mimetype == "text/css"
     assert b".nw-editor" in response.data
 
 
-def test_javascript_responses() -> None:
+def test_javascript_responses_include_expected_mime_type() -> None:
     app = create_app()
     OllowEditor(app)
     client = app.test_client()
     browser = client.get("/olloweditor/olloweditor.browser.js")
     init = client.get("/olloweditor/olloweditor-init.js")
     assert browser.status_code == 200
+    assert browser.mimetype == "text/javascript"
     assert b"OllowEditor" in browser.data
     assert init.status_code == 200
+    assert init.mimetype == "text/javascript"
     assert b"bootOllowEditor" in init.data
 
 
@@ -103,9 +122,13 @@ def test_multiple_app_instances() -> None:
     assert first.extensions["olloweditor"] is first_extension
     assert second.extensions["olloweditor"] is second_extension
     with first.test_request_context("/"):
-        assert "/first/olloweditor.css" in str(first.jinja_env.globals["olloweditor_assets"]())
+        assert "/first/olloweditor.css" in str(
+            first.jinja_env.globals["olloweditor_assets"]()
+        )
     with second.test_request_context("/"):
-        assert "/second/olloweditor.css" in str(second.jinja_env.globals["olloweditor_assets"]())
+        assert "/second/olloweditor.css" in str(
+            second.jinja_env.globals["olloweditor_assets"]()
+        )
 
 
 def test_textarea_helper_escapes_content_and_attributes() -> None:
@@ -117,7 +140,7 @@ def test_textarea_helper_escapes_content_and_attributes() -> None:
                 "content",
                 '<script>alert("x")</script>',
                 id='content"><svg',
-                options={"theme": "auto", "label": '<bad>'},
+                options={"theme": "auto", "label": "<bad>"},
                 attrs={"class": "editor", "data-note": '"quoted" & special'},
             )
         )
@@ -126,7 +149,7 @@ def test_textarea_helper_escapes_content_and_attributes() -> None:
     assert "&lt;script&gt;" in html
     assert "&#34;" in html
     assert "&amp;" in html
-    assert 'data-olloweditor-options="{&#34;theme&#34;:&#34;auto&#34;,&#34;label&#34;:&#34;&lt;bad&gt;&#34;}"' in html or 'data-olloweditor-options="{&#34;label&#34;:&#34;&lt;bad&gt;&#34;,&#34;theme&#34;:&#34;auto&#34;}"' in html
+    assert _extract_options(html) == {"theme": "auto", "label": "<bad>"}
 
 
 def test_request_form_usage_example() -> None:

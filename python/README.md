@@ -346,10 +346,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev,test]"
-python -m pytest
-python -m build
-python -m twine check dist/*
-python scripts/check_wheel_contents.py dist/*.whl
+python scripts/verify_release.py
 ```
 
 Recommended release order:
@@ -358,6 +355,25 @@ Recommended release order:
 2. Synchronize Python package assets.
 3. Verify synchronized Python assets.
 4. Build the Python package and validate the wheel.
+
+Supported Python versions for automated verification:
+
+- Python 3.10
+- Python 3.11
+- Python 3.12
+- Python 3.13
+
+Useful local commands:
+
+```bash
+python -m pytest
+python -m pytest --cov=olloweditor
+python -m ruff check .
+python -m ruff format --check .
+python -m mypy src
+python -m build
+python -m twine check dist/*
+```
 
 ## License
 

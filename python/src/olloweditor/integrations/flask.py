@@ -13,10 +13,12 @@ from olloweditor.resources import get_asset_path
 try:
     from flask import Blueprint, Flask, abort, current_app, url_for
     from flask.typing import ResponseReturnValue
-except ModuleNotFoundError as exc:  # pragma: no cover - exercised via import isolation test
+except (
+    ModuleNotFoundError
+) as exc:  # pragma: no cover - exercised via import isolation test
     if exc.name and exc.name.split(".")[0] == "flask":
         raise ImportError(
-            'The OllowEditor Flask integration requires Flask. '
+            "The OllowEditor Flask integration requires Flask. "
             'Install it with `pip install "olloweditor[flask]"`.'
         ) from exc
     raise
@@ -42,7 +44,9 @@ class OllowEditor:
             return
 
         config = {
-            "url_prefix": app.config.get("OLLOWEDITOR_URL_PREFIX", self.default_url_prefix),
+            "url_prefix": app.config.get(
+                "OLLOWEDITOR_URL_PREFIX", self.default_url_prefix
+            ),
         }
 
         blueprint = Blueprint(
@@ -59,12 +63,14 @@ class OllowEditor:
                 abort(404)
 
             mimetype, _ = mimetypes.guess_type(filename)
-            with as_file(traversable) as local_path:
-                with open(local_path, "rb") as asset_file:
-                    return current_app.response_class(
-                        asset_file.read(),
-                        mimetype=mimetype or "application/octet-stream",
-                    )
+            with (
+                as_file(traversable) as local_path,
+                open(local_path, "rb") as asset_file,
+            ):
+                return current_app.response_class(
+                    asset_file.read(),
+                    mimetype=mimetype or "application/octet-stream",
+                )
 
         if blueprint.name not in app.blueprints:
             app.register_blueprint(blueprint)
@@ -78,7 +84,9 @@ class OllowEditor:
     def _make_assets_helper():
         def olloweditor_assets() -> Markup:
             css_url = url_for("olloweditor.asset", filename="olloweditor.css")
-            browser_url = url_for("olloweditor.asset", filename="olloweditor.browser.js")
+            browser_url = url_for(
+                "olloweditor.asset", filename="olloweditor.browser.js"
+            )
             init_url = url_for("olloweditor.asset", filename="olloweditor-init.js")
             html = (
                 f'<link rel="stylesheet" href="{escape(css_url)}">\n'

@@ -46,13 +46,9 @@ class OllowEditorHTMLField(serializers.CharField):
         except serializers.ValidationError:
             raise
         except Exception as exc:
-            raise serializers.ValidationError(
-                f"HTML sanitizer failed: {exc}"
-            ) from exc
+            raise serializers.ValidationError(f"HTML sanitizer failed: {exc}") from exc
 
         if not isinstance(sanitized, str):
-            raise serializers.ValidationError(
-                "HTML sanitizer must return a string."
-            )
+            raise serializers.ValidationError("HTML sanitizer must return a string.")
 
         return sanitized

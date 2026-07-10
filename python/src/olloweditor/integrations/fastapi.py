@@ -10,7 +10,9 @@ try:
     from fastapi import FastAPI
     from starlette.routing import Mount
     from starlette.staticfiles import StaticFiles
-except ModuleNotFoundError as exc:  # pragma: no cover - exercised via import isolation test
+except (
+    ModuleNotFoundError
+) as exc:  # pragma: no cover - exercised via import isolation test
     if exc.name and exc.name.split(".")[0] in {"fastapi", "starlette"}:
         raise ImportError(
             "The OllowEditor FastAPI integration requires FastAPI and Starlette. "
@@ -52,11 +54,13 @@ def mount_olloweditor(
                 return mount_path
             if route.path == mount_path:
                 raise ValueError(
-                    f"Mount path {mount_path!r} is already registered with name {route.name!r}."
+                    "Mount path "
+                    f"{mount_path!r} is already registered with name {route.name!r}."
                 )
             if route.name == name:
                 raise ValueError(
-                    f"Mount name {name!r} is already registered for path {route.path!r}."
+                    f"Mount name {name!r} is already registered "
+                    f"for path {route.path!r}."
                 )
 
     app.mount(

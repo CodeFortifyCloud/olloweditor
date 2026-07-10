@@ -20,7 +20,9 @@ def _validate_filename(filename: str) -> PurePosixPath:
     if candidate.name in {"", ".", ".."}:
         raise ValueError(f"Asset filename is invalid: {filename!r}")
     if any(part in {"", ".", ".."} for part in candidate.parts):
-        raise ValueError(f"Asset filename must not contain path traversal: {filename!r}")
+        raise ValueError(
+            f"Asset filename must not contain path traversal: {filename!r}"
+        )
 
     return candidate
 

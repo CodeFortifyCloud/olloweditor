@@ -7,7 +7,11 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from olloweditor.integrations.fastapi import mount_olloweditor, olloweditor_assets, olloweditor_textarea
+from olloweditor.integrations.fastapi import (
+    mount_olloweditor,
+    olloweditor_assets,
+    olloweditor_textarea,
+)
 
 
 @dataclass
@@ -49,7 +53,12 @@ def create_app() -> FastAPI:
             return templates.TemplateResponse(
                 request,
                 "form.html",
-                {"request": request, "errors": errors, "title": title, "content": content},
+                {
+                    "request": request,
+                    "errors": errors,
+                    "title": title,
+                    "content": content,
+                },
                 status_code=400,
             )
 

@@ -71,11 +71,13 @@ all = [
 ]
 dev = [
   "build>=1.2.1",
+  "mypy>=1.10",
   "twine>=5.1.1",
   "ruff>=0.5.0"
 ]
 test = [
   "pytest>=8.2",
+  "pytest-cov>=5.0",
   "Django>=4.2",
   "djangorestframework>=3.15",
   "Flask>=3.0",
@@ -102,3 +104,36 @@ olloweditor = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+addopts = "--cov=olloweditor --cov-report=term-missing --cov-fail-under=85"
+
+[tool.coverage.run]
+branch = true
+source = ["olloweditor"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+omit = [
+  "src/olloweditor/apps.py",
+]
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S106", "S603", "S607"]
+"examples/**/*.py" = ["S105", "S106", "S108", "S201"]
+"scripts/*.py" = ["S603", "S607"]
+"src/olloweditor/integrations/flask.py" = ["S704"]
+"src/olloweditor/integrations/fastapi.py" = ["S704"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src"]
+check_untyped_defs = true
+no_implicit_optional = true
+warn_unused_ignores = true
+ignore_missing_imports = true

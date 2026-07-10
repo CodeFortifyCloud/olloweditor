@@ -20,7 +20,9 @@ class OllowEditorConfig(AppConfig):
         from .integrations.django.fields import OllowEditorField
         from .integrations.django.widgets import OllowEditorWidget
 
-        existing = admin_options.FORMFIELD_FOR_DBFIELD_DEFAULTS.get(OllowEditorField, {})
+        existing = admin_options.FORMFIELD_FOR_DBFIELD_DEFAULTS.get(
+            OllowEditorField, {}
+        )
         merged = {"widget": OllowEditorWidget}
         merged.update(existing)
         admin_options.FORMFIELD_FOR_DBFIELD_DEFAULTS[OllowEditorField] = merged

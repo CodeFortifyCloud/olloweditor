@@ -27,13 +27,19 @@ def check_wheel(path: Path) -> int:
 
         print(f"{path}: OK")
         for item in sorted(REQUIRED):
-            print(f"  - {item}")
+            size = wheel.getinfo(item).file_size
+            if size <= 0:
+                print(f"{path}: empty required asset {item}", file=sys.stderr)
+                return 1
+            print(f"  - {item} ({size} bytes)")
         return 0
 
 
 def main(argv: list[str]) -> int:
     if len(argv) < 2:
-        print("Usage: python scripts/check_wheel_contents.py dist/*.whl", file=sys.stderr)
+        print(
+            "Usage: python scripts/check_wheel_contents.py dist/*.whl", file=sys.stderr
+        )
         return 1
 
     status = 0

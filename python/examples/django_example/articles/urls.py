@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from django.urls import path
 
-from .views import ArticleCreateView, ArticleDetailView, ArticleListView, ArticleUpdateView
+from .views import (
+    ArticleCreateView,
+    ArticleDetailView,
+    ArticleListView,
+    ArticleUpdateView,
+)
 
 urlpatterns = [
     path("", ArticleListView.as_view(), name="article-list"),

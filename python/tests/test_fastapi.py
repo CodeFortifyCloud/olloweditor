@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import json
+import re
+from html import unescape
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
@@ -12,11 +16,21 @@ from olloweditor.integrations.fastapi import (
     olloweditor_textarea,
 )
 
+DATA_OPTIONS_RE = re.compile(r'data-olloweditor-options="([^"]+)"')
 
-def create_app(*, path: str = "/olloweditor/static", name: str = "olloweditor_static") -> FastAPI:
+
+def create_app(
+    *, path: str = "/olloweditor/static", name: str = "olloweditor_static"
+) -> FastAPI:
     app = FastAPI()
     mount_olloweditor(app, path=path, name=name)
     return app
+
+
+def _extract_options(html: str) -> dict[str, object]:
+    match = DATA_OPTIONS_RE.search(html)
+    assert match is not None
+    return json.loads(unescape(match.group(1)))
 
 
 def test_asset_mount() -> None:
@@ -63,8 +77,10 @@ def test_generated_asset_tags() -> None:
     assert "/olloweditor/static/olloweditor.css" in html
     assert "/olloweditor/static/olloweditor.browser.js" in html
     assert "/olloweditor/static/olloweditor-init.js" in html
-    assert html.index("olloweditor.css") < html.index("olloweditor.browser.js") < html.index(
-        "olloweditor-init.js"
+    assert (
+        html.index("olloweditor.css")
+        < html.index("olloweditor.browser.js")
+        < html.index("olloweditor-init.js")
     )
 
 
@@ -75,7 +91,9 @@ def test_trailing_slash_normalization() -> None:
     client = TestClient(app)
     response = client.get("/assets/editor/olloweditor.css")
     assert response.status_code == 200
-    assert "/assets/editor/olloweditor.browser.js" in str(olloweditor_assets("/assets/editor/"))
+    assert "/assets/editor/olloweditor.browser.js" in str(
+        olloweditor_assets("/assets/editor/")
+    )
 
 
 def test_duplicate_mount_behavior_returns_existing_mount() -> None:
@@ -146,6 +164,7 @@ def test_textarea_helper_escapes_content_and_attributes() -> None:
     assert "&lt;script&gt;" in html
     assert "&#34;" in html
     assert "&amp;" in html
+    assert _extract_options(html) == {"theme": "auto", "label": "<bad>"}
 
 
 def test_form_submission_example() -> None:

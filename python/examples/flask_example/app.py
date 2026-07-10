@@ -35,7 +35,9 @@ def create_app() -> Flask:
             errors["content"] = "Content is required."
         if errors:
             return (
-                render_template("form.html", errors=errors, title=title, content=content),
+                render_template(
+                    "form.html", errors=errors, title=title, content=content
+                ),
                 400,
             )
 

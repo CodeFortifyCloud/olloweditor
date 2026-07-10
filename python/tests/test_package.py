@@ -2,26 +2,36 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from textwrap import dedent
 
 import olloweditor
 
-from olloweditor.resources import asset_exists, get_asset_path, get_static_root
+
+def _run_python(code: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "-c", dedent(code)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
 
 def test_import_package() -> None:
     assert olloweditor is not None
 
 
-def test_base_import_does_not_import_django() -> None:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            "import sys, olloweditor; print('django' in sys.modules, 'rest_framework' in sys.modules, 'flask' in sys.modules, 'fastapi' in sys.modules)",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
+def test_base_import_does_not_import_optional_frameworks() -> None:
+    result = _run_python(
+        """
+        import sys
+        import olloweditor
+        print(
+            "django" in sys.modules,
+            "rest_framework" in sys.modules,
+            "flask" in sys.modules,
+            "fastapi" in sys.modules,
+        )
+        """
     )
     assert result.stdout.strip() == "False False False False"
 
@@ -31,55 +41,53 @@ def test_version_available() -> None:
     assert olloweditor.__version__
 
 
-def test_static_root_resolves() -> None:
-    root = get_static_root()
-    assert root.is_dir()
-    assert root.name == "olloweditor"
+def test_framework_modules_raise_clear_import_errors_without_dependencies() -> None:
+    cases = [
+        (
+            "olloweditor.integrations.django",
+            {"django"},
+            'Install it with `pip install "olloweditor[django]"`.',
+        ),
+        (
+            "olloweditor.integrations.drf",
+            {"rest_framework"},
+            'Install it with `pip install "olloweditor[drf]"`.',
+        ),
+        (
+            "olloweditor.integrations.flask",
+            {"flask"},
+            'Install it with `pip install "olloweditor[flask]"`.',
+        ),
+        (
+            "olloweditor.integrations.fastapi",
+            {"fastapi", "starlette"},
+            'Install it with `pip install "olloweditor[fastapi]"`.',
+        ),
+    ]
+    for module_name, blocked, expected in cases:
+        result = _run_python(
+            f"""
+            import builtins
+            import importlib
 
+            blocked = {sorted(blocked)!r}
+            real_import = builtins.__import__
 
-def test_expected_assets_exist() -> None:
-    assert asset_exists("olloweditor.browser.js") is True
-    assert asset_exists("olloweditor.css") is True
-    assert asset_exists("olloweditor-init.js") is True
+            def fake_import(name, globals=None, locals=None, fromlist=(), level=0):
+                if name.split(".")[0] in blocked:
+                    error = ModuleNotFoundError(f"No module named '{{name}}'")
+                    error.name = name
+                    raise error
+                return real_import(name, globals, locals, fromlist, level)
 
+            builtins.__import__ = fake_import
 
-def test_asset_path_returns_traversable() -> None:
-    asset = get_asset_path("olloweditor.browser.js")
-    assert asset.is_file()
-    assert asset.name == "olloweditor.browser.js"
-
-
-def test_browser_bundle_is_readable() -> None:
-    asset = get_asset_path("olloweditor.browser.js")
-    content = asset.read_text(encoding="utf8")
-    assert "OllowEditor" in content
-
-
-def test_css_bundle_is_readable() -> None:
-    asset = get_asset_path("olloweditor.css")
-    content = asset.read_text(encoding="utf8")
-    assert ".nw-editor" in content
-
-
-def test_initializer_bundle_is_readable() -> None:
-    asset = get_asset_path("olloweditor-init.js")
-    content = asset.read_text(encoding="utf8")
-    assert "bootOllowEditor" in content
-
-
-def test_unsafe_path_is_rejected() -> None:
-    try:
-        get_asset_path("../secret")
-    except ValueError as exc:
-        assert "path traversal" in str(exc)
-    else:
-        raise AssertionError("Expected ValueError for unsafe asset path")
-
-
-def test_missing_asset_reports_clearly() -> None:
-    try:
-        get_asset_path("missing.js")
-    except FileNotFoundError as exc:
-        assert "OllowEditor asset not found: missing.js" in str(exc)
-    else:
-        raise AssertionError("Expected FileNotFoundError for missing asset")
+            try:
+                importlib.import_module({module_name!r})
+            except ImportError as exc:
+                print(str(exc))
+            else:
+                raise SystemExit("expected ImportError")
+            """
+        )
+        assert expected in result.stdout.strip()

@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-import subprocess
 import os
+import subprocess
 from pathlib import Path
-
 
 PYTHON_DIR = Path(__file__).resolve().parents[1]
 EXAMPLES_DIR = PYTHON_DIR / "examples"
 PYTHON_BIN = PYTHON_DIR / ".venv" / "bin" / "python"
 
 
-def _run_example_snippet(example_dir: Path, snippet: str) -> subprocess.CompletedProcess[str]:
+def _run_example_snippet(
+    example_dir: Path, snippet: str
+) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["PYTHONPATH"] = str(PYTHON_DIR / "src")
     return subprocess.run(
@@ -80,7 +81,10 @@ app = create_app()
 client = app.test_client()
 assert client.get("/").status_code == 200
 assert client.get("/olloweditor/olloweditor.css").status_code == 200
-response = client.post("/articles", data={"title": "Example", "content": "<p>Saved</p>"})
+response = client.post(
+    "/articles",
+    data={"title": "Example", "content": "<p>Saved</p>"},
+)
 assert response.status_code == 302
 print("ok")
 """,
@@ -98,7 +102,11 @@ app = create_app()
 client = TestClient(app)
 assert client.get("/").status_code == 200
 assert client.get("/olloweditor/static/olloweditor.css").status_code == 200
-response = client.post("/articles", data={"title": "Example", "content": "<p>Saved</p>"}, follow_redirects=False)
+response = client.post(
+    "/articles",
+    data={"title": "Example", "content": "<p>Saved</p>"},
+    follow_redirects=False,
+)
 assert response.status_code == 303
 print("ok")
 """,

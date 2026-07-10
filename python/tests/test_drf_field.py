@@ -118,7 +118,9 @@ def test_sanitizer_invocation_and_transformed_output() -> None:
     class SanitizedSerializer(serializers.Serializer):
         content = OllowEditorHTMLField(sanitizer=sanitizer)
 
-    serializer = SanitizedSerializer(data={"content": "<p>safe</p><script>alert(1)</script>"})
+    serializer = SanitizedSerializer(
+        data={"content": "<p>safe</p><script>alert(1)</script>"}
+    )
     assert serializer.is_valid(), serializer.errors
     assert calls == ["<p>safe</p><script>alert(1)</script>"]
     assert serializer.validated_data["content"] == "<p>safe</p>alert(1)"
@@ -156,7 +158,9 @@ def test_style_uses_textarea_presentation() -> None:
 
 
 def test_serialization_output() -> None:
-    serializer = ArticleSerializer(instance={"title": "Hello", "content": "<p>Article</p>"})
+    serializer = ArticleSerializer(
+        instance={"title": "Hello", "content": "<p>Article</p>"}
+    )
     assert serializer.data == {"title": "Hello", "content": "<p>Article</p>"}
 
 
