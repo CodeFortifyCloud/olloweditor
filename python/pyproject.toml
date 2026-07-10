@@ -43,10 +43,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/CodeFortifyCloud/olloweditor"
-Documentation = "https://github.com/CodeFortifyCloud/olloweditor/tree/main/python"
-Repository = "https://github.com/CodeFortifyCloud/olloweditor"
-Issues = "https://github.com/CodeFortifyCloud/olloweditor/issues"
+Homepage = "https://github.com/jakiiii/olloweditor"
+Documentation = "https://github.com/jakiiii/olloweditor/tree/main/python"
+Repository = "https://github.com/jakiiii/olloweditor"
+Issues = "https://github.com/jakiiii/olloweditor/issues"
 
 [project.optional-dependencies]
 django = [

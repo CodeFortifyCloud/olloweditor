@@ -1,6 +1,6 @@
 # olloweditor
 
-[![Python CI](https://github.com/CodeFortifyCloud/olloweditor/actions/workflows/python-ci.yml/badge.svg)](https://github.com/CodeFortifyCloud/olloweditor/actions/workflows/python-ci.yml)
+[![Python CI](https://github.com/jakiiii/olloweditor/actions/workflows/python-ci.yml/badge.svg)](https://github.com/jakiiii/olloweditor/actions/workflows/python-ci.yml)
 
 `olloweditor` packages the OllowEditor browser build for Python applications and adds framework integrations for Django, Django REST Framework, Flask, and FastAPI.
 
@@ -8,11 +8,11 @@ It does not reimplement the editor in Python. The package ships the compiled Jav
 
 ## Links
 
-- Main OllowEditor project: <https://github.com/CodeFortifyCloud/olloweditor>
-- Python documentation: <https://github.com/CodeFortifyCloud/olloweditor/tree/main/python>
+- Main OllowEditor project: <https://github.com/jakiiii/olloweditor>
+- Python documentation: <https://github.com/jakiiii/olloweditor/tree/main/python>
 - npm package: <https://www.npmjs.com/package/@codefortify/olloweditor>
-- GitHub repository: <https://github.com/CodeFortifyCloud/olloweditor>
-- Issue tracker: <https://github.com/CodeFortifyCloud/olloweditor/issues>
+- GitHub repository: <https://github.com/jakiiii/olloweditor>
+- Issue tracker: <https://github.com/jakiiii/olloweditor/issues>
 
 ## Features
 

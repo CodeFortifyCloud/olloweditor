@@ -18,13 +18,13 @@
     "content-editor",
     "html-editor"
   ],
-  "homepage": "https://github.com/CodeFortifyCloud/olloweditor",
+  "homepage": "https://github.com/jakiiii/olloweditor",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CodeFortifyCloud/olloweditor.git"
+    "url": "git+https://github.com/jakiiii/olloweditor.git"
   },
   "bugs": {
-    "url": "https://github.com/CodeFortifyCloud/olloweditor/issues"
+    "url": "https://github.com/jakiiii/olloweditor/issues"
   },
   "license": "MIT",
   "author": "CodeFortify",
