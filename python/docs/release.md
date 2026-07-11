@@ -8,7 +8,7 @@ Verify package status and version availability:
 
 ```bash
 cd python
-python scripts/check_pypi_status.py olloweditor 0.1.1
+python scripts/check_pypi_status.py olloweditor 0.1.2
 ```
 
 Interpretation:
@@ -33,7 +33,7 @@ Do not store PyPI or TestPyPI tokens in this repository.
 Configure a PyPI trusted publisher with these values:
 
 - PyPI project name: `olloweditor`
-- GitHub owner: `jakiiii`
+- GitHub owner: `CodeFortifyCloud`
 - GitHub repository: `olloweditor`
 - Workflow filename: `.github/workflows/publish-python.yml`
 - Environment name: `pypi`
@@ -74,7 +74,7 @@ For release-tag validation without publishing:
 
 ```bash
 python scripts/validate_publish_release.py \
-  --release-tag v0.1.1 \
+  --release-tag v0.1.2 \
   --skip-git-check
 ```
 
@@ -140,7 +140,7 @@ Use the dedicated verifier from the `python/` directory:
 ```bash
 python scripts/verify_testpypi_release.py \
   --package olloweditor \
-  --version 0.1.1
+  --version 0.1.2
 ```
 
 What it does:

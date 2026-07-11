@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "olloweditor"
-version = "0.1.1"
-description = "Python packaging foundation for the OllowEditor browser assets and future framework integrations."
+version = "0.1.2"
+description = "Python integrations and packaged browser assets for using OllowEditor with Django, Django REST Framework, Flask, and FastAPI."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -43,10 +43,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/jakiiii/olloweditor"
-Documentation = "https://github.com/jakiiii/olloweditor/tree/main/python"
-Repository = "https://github.com/jakiiii/olloweditor"
-Issues = "https://github.com/jakiiii/olloweditor/issues"
+Homepage = "https://github.com/CodeFortifyCloud/olloweditor"
+Documentation = "https://github.com/CodeFortifyCloud/olloweditor/tree/main/python"
+Repository = "https://github.com/CodeFortifyCloud/olloweditor"
+Issues = "https://github.com/CodeFortifyCloud/olloweditor/issues"
 
 [project.optional-dependencies]
 django = [

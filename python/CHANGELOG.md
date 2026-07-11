@@ -2,6 +2,17 @@
 
 All notable changes to the Python package will be documented in this file.
 
+## 0.1.2 - 2026-07-11
+
+Documentation and metadata release candidate.
+
+Changed:
+
+- rewrote the Python package README for GitHub and PyPI users
+- corrected repository and issue tracker URLs to the current GitHub owner
+- advanced the synchronized Python and npm release version after `0.1.1` had already been published to TestPyPI
+- retained the corrected MIT `License-Expression` metadata and packaged license file
+
 ## 0.1.1 - 2026-07-11
 
 Metadata-only release candidate.
