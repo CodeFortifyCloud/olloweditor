@@ -8,7 +8,7 @@ Verify package status and version availability:
 
 ```bash
 cd python
-python scripts/check_pypi_status.py olloweditor 0.1.2
+python scripts/check_pypi_status.py olloweditor 0.1.0
 ```
 
 Interpretation:
@@ -74,9 +74,15 @@ For release-tag validation without publishing:
 
 ```bash
 python scripts/validate_publish_release.py \
-  --release-tag v0.1.2 \
+  --release-tag v0.1.0 \
   --skip-git-check
 ```
+
+For the first production release, note that TestPyPI and PyPI are separate indexes:
+
+- a version published to TestPyPI can still be used for the first production PyPI release
+- TestPyPI files remain immutable and cannot be overwritten
+- local verification and CI must validate the production source state before the GitHub release is published
 
 ## GitHub Actions publish flow
 
@@ -140,7 +146,7 @@ Use the dedicated verifier from the `python/` directory:
 ```bash
 python scripts/verify_testpypi_release.py \
   --package olloweditor \
-  --version 0.1.2
+  --version 0.1.0
 ```
 
 What it does:
