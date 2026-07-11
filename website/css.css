@@ -1907,6 +1907,74 @@ img {
     color: var(--text);
 }
 
+.docs-package-grid,
+.docs-framework-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.docs-package-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.docs-package-card,
+.docs-framework-card {
+    padding: 20px;
+    border: 1px solid rgba(122, 148, 187, 0.18);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.84);
+    box-shadow: var(--shadow-soft);
+}
+
+.docs-package-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(47, 124, 255, 0.14), rgba(70, 216, 236, 0.18));
+    color: var(--primary-strong);
+}
+
+.docs-package-card h3,
+.docs-framework-card h3 {
+    margin: 0 0 10px;
+    color: var(--text);
+    font-size: 1.08rem;
+}
+
+.docs-package-card p,
+.docs-framework-card p {
+    margin: 0;
+    color: var(--text-soft);
+    line-height: 1.7;
+}
+
+.docs-install-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.docs-install-grid-compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.docs-install-card-stacked {
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.docs-install-card-stacked .docs-install-copy {
+    width: 100%;
+}
+
+.docs-install-card-stacked .docs-copy-btn {
+    width: auto;
+}
+
 .docs-feature-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1962,6 +2030,11 @@ img {
     line-height: 1.65;
 }
 
+.docs-support-table td:nth-child(2),
+.docs-support-table td:nth-child(3) {
+    white-space: nowrap;
+}
+
 .docs-table tbody tr:last-child td {
     border-bottom: 0;
 }
@@ -1998,6 +2071,15 @@ img {
     color: var(--primary-strong);
     font-size: 1.05rem;
     font-weight: 800;
+}
+
+.docs-code-compact {
+    margin-top: 0;
+    padding: 16px;
+}
+
+.docs-framework-card .docs-copy-btn {
+    margin-top: 14px;
 }
 
 .docs-toc-inner {
@@ -2056,7 +2138,11 @@ img {
         display: none;
     }
 
-    .docs-feature-grid {
+    .docs-feature-grid,
+    .docs-package-grid,
+    .docs-framework-grid,
+    .docs-install-grid,
+    .docs-install-grid-compact {
         grid-template-columns: 1fr;
     }
 
@@ -2124,6 +2210,10 @@ img {
     }
 
     .docs-copy-btn {
+        width: 100%;
+    }
+
+    .docs-install-card-stacked .docs-copy-btn {
         width: 100%;
     }
 
